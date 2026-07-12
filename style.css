@@ -1,0 +1,242 @@
+/* My first CSS file – I'm still learning! */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0b0a16;
+  color: #e2e8f0;
+  font-family: Arial, Helvetica, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  background: #12101e;
+  max-width: 950px;
+  width: 100%;
+  border-radius: 30px;
+  padding: 30px 25px;
+  border: 1px solid #2a2a44;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.dojo-header h1 {
+  font-size: 2.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 2px;
+  color: #ffdd00;
+  text-shadow: 0 0 8px #ff2a75;
+}
+.dojo-header h1 span {
+  color: #00f0ff;
+}
+.dojo-header p {
+  color: #a0b4c8;
+  border-left: 4px solid #ffdd00;
+  padding-left: 15px;
+  margin: 10px 0 20px 0;
+}
+
+h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  border-bottom: 3px solid #ff2a75;
+  display: inline-block;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.subtext {
+  color: #8899aa;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+section {
+  margin-bottom: 25px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  color: #b0c8dd;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+input {
+  padding: 10px 12px;
+  border: 2px solid #2a2a44;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #111122;
+  color: white;
+  width: 100%;
+}
+input:focus {
+  border-color: #00f0ff;
+  outline: none;
+}
+
+.subject-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.subject-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+  align-items: center;
+}
+.exam-section input {
+  max-width: 200px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 20px 0 15px 0;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 130px;
+  text-transform: uppercase;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 1px;
+}
+
+#analyzeBtn {
+  background: #ff2a75;
+  color: white;
+  box-shadow: 0 0 10px #ff2a75;
+}
+#analyzeBtn:hover {
+  background: #ff0055;
+  transform: scale(1.02);
+}
+
+.clear {
+  background: #2a2a44;
+  color: #99aabb;
+}
+.clear:hover {
+  background: #3a3a5a;
+}
+
+.print {
+  background: #ffdd00;
+  color: #0a0815;
+}
+.print:hover {
+  background: #ffea55;
+}
+
+.results-card {
+  margin-top: 20px;
+  padding: 20px;
+  background: #0e0c1a;
+  border-radius: 24px;
+  border: 1px solid #2a2a44;
+  min-height: 100px;
+  line-height: 1.7;
+}
+.results-card h2 {
+  border-bottom: none;
+  display: block;
+  color: #ffdd00;
+}
+.results-card h3 {
+  color: #00f0ff;
+  margin-top: 15px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+}
+.results-card p {
+  margin: 8px 0;
+}
+.results-card .priority-high {
+  color: #ff2a75;
+  font-weight: bold;
+  background: #221122;
+  padding: 2px 12px;
+  border-radius: 20px;
+  border-left: 3px solid #ff2a75;
+  display: inline-block;
+}
+.results-card .priority-medium {
+  color: #ffdd00;
+  font-weight: bold;
+  background: #222011;
+  padding: 2px 12px;
+  border-radius: 20px;
+  border-left: 3px solid #ffdd00;
+  display: inline-block;
+}
+.results-card .priority-low {
+  color: #00f0ff;
+  font-weight: bold;
+  background: #001a22;
+  padding: 2px 12px;
+  border-radius: 20px;
+  border-left: 3px solid #00f0ff;
+  display: inline-block;
+}
+.results-card .motivation-block {
+  background: #1a0f1f;
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px dashed #ff2a75;
+  margin-top: 15px;
+  font-style: italic;
+  color: #ddeeff;
+}
+
+footer {
+  margin-top: 30px;
+  font-size: 0.8rem;
+  color: #445566;
+  text-align: center;
+  border-top: 1px solid #1a1a2e;
+  padding-top: 15px;
+}
+
+/* For phones */
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+  .subject-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .dojo-header h1 {
+    font-size: 1.5rem;
+  }
+  .actions {
+    flex-direction: column;
+  }
+  button {
+    width: 100%;
+  }
+}

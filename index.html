@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ ANIME STUDY DOJO ⚡</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="dojo-header">
+      <h1>⚡ <span>ANIME</span> STUDY DOJO</h1>
+      <p>🔥 Train your brain. Dominate your exams. Plus Ultra! 🔥</p>
+    </header>
+
+    <!-- User Identity -->
+    <section class="user-section">
+      <label for="name">👤 YOUR NAME (SHINOBI REGISTRY)</label>
+      <input type="text" id="name" placeholder="e.g., Naruto Uzumaki" autofocus>
+    </section>
+
+    <!-- Custom Subject Grid (7 Slots) -->
+    <section class="marks-section">
+      <h2>📜 SUBJECT & GRADE REGISTER</h2>
+      <p class="subtext">Enter your subjects and power levels (0–100). Leave unused slots empty.</p>
+      <div class="subject-grid" id="subjectGrid">
+        <!-- 7 Rows will be populated by JS or static -->
+      </div>
+    </section>
+
+    <!-- Exam Countdown -->
+    <section class="exam-section">
+      <h2>⏳ DAYS UNTIL FINAL BOSS (EXAM)</h2>
+      <input type="number" id="days" min="0" max="365" placeholder="e.g., 14">
+    </section>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+      <button id="analyzeBtn">🔥 RUN ANALYSIS</button>
+      <button id="clearBtn" class="clear">🗑️ RESET DOJO</button>
+      <button id="printBtn" class="print">📜 PRINT SCROLL</button>
+    </div>
+
+    <!-- Results / Motivation Area -->
+    <div id="results" class="results-card">
+      <p style="color: #8899aa;">💪 Enter your stats and hit <strong>Run Analysis</strong> to get your personalized training plan!</p>
+    </div>
+
+    <footer>
+      <p>✨ "Believe in the me that believes in you!" – Kamina ✨</p>
+      <p>© 2026 Anime Study Dojo. All rights reserved by David Mutesa.
+        <p>Made with ❤️ for anime fans and students worldwide.</p>
+        <p> contact me @ davidmutesajunoir@gmail.com</p>
+      </p>
+
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
