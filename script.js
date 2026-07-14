@@ -1,24 +1,25 @@
-// ================================================================
-// STUDY DOJO – SYSTEM SCRIPT (UPDATED PRIORITY LOGIC)
-// Full comments for every section – beginner friendly.
-// ================================================================
+// ======================================================
+// STUDY DOJO - SYSTEM LOGIC
+// 8 subject slots, minimum 3 required, auto-correct,
+// priority logic based on days remaining (per week)
+// ======================================================
 
-// ----- 1. DOM REFERENCES – connect to HTML elements -----
+// ----- DOM REFERENCES -----
 const nameInput = document.getElementById('name');
 const daysInput = document.getElementById('days');
 const resultsDiv = document.getElementById('results');
 const subjectGrid = document.getElementById('subjectGrid');
 
-// ----- 2. BUILD THE 7 SUBJECT SLOTS dynamically -----
+// ----- BUILD 8 SUBJECT SLOTS -----
 function buildSubjectGrid() {
   subjectGrid.innerHTML = '';
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     const row = document.createElement('div');
     row.className = 'subject-row';
     row.innerHTML = `
       <div>
         <label for="subject-${i}">📘 Subject ${i}</label>
-        <input type="text" id="subject-${i}" placeholder="e.g., History" data-subject="true">
+        <input type="text" id="subject-${i}" placeholder="e.g., Physics" data-subject="true">
       </div>
       <div>
         <label for="grade-${i}">🎯 Grade (0-100)</label>
@@ -30,29 +31,65 @@ function buildSubjectGrid() {
 }
 buildSubjectGrid();
 
-// ----- 3. MOTIVATIONAL QUOTES (120+ curated – anime + study wisdom) -----
+// ----- AUTO-CORRECT DICTIONARY (for subject names) -----
+const corrections = {
+  'math': 'Mathematics',
+  'maths': 'Mathematics',
+  'physic': 'Physics',
+  'chem': 'Chemistry',
+  'bio': 'Biology',
+  'hist': 'History',
+  'geo': 'Geography',
+  'eng': 'English',
+  'lit': 'Literature',
+  'ict': 'Computer Studies',
+  'comp': 'Computer Studies',
+  'cs': 'Computer Studies',
+  'bus': 'Business Studies',
+  'eco': 'Economics',
+  'acc': 'Accounting',
+  'art': 'Art',
+  'music': 'Music',
+  'pe': 'Physical Education',
+  'psych': 'Psychology',
+  'soc': 'Sociology',
+  'stat': 'Statistics',
+  'calc': 'Calculus',
+  'alg': 'Algebra',
+  'trig': 'Trigonometry'
+};
+
+function autoCorrectSubject(name) {
+  const lower = name.trim().toLowerCase();
+  // Check exact match first
+  if (corrections[lower]) return corrections[lower];
+  // Check if name starts with any key (e.g., "Bio" → "Biology")
+  for (const [key, value] of Object.entries(corrections)) {
+    if (lower.startsWith(key)) return value;
+  }
+  // Capitalize first letter of each word (fallback)
+  return name.trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+}
+
+// ----- MOTIVATIONAL QUOTES (100+ curated) -----
 const motivationQuotes = [
-  // --- ANIME QUOTES ---
+  // Anime quotes
   "Believe in the me that believes in you! – Kamina (Gurren Lagann)",
   "A dropout will beat a genius through hard work. – Rock Lee (Naruto)",
   "If you don't like your destiny, don't accept it. – Naruto Uzumaki",
-  "I never go back on my word, that's my ninja way! – Naruto",
+  "I never go back on my word, that's my ninja way! – Naruto Uzumaki",
   "Power comes in response to a need, not a desire. – Goku (Dragon Ball)",
   "It's not about the pain, it's about the lesson. – Erza Scarlet (Fairy Tail)",
   "The moment you think of giving up, think of why you held on so long. – Eren Yeager (AOT)",
   "I don't know what the future holds, but I know that I won't give up. – Luffy (One Piece)",
-  "Hard work betters talent when talent doesn't work hard. – Various",
   "Give up on giving up. – Rock Lee",
-  "You are the protagonist of your own story. Act like it! – Various",
-  "Rest if you must, but don't you ever quit. – Various",
-  "Your future is created by what you do today, not tomorrow. – Various",
-  "The only way to truly fail is to give up. – Various",
-  "Believe in your own potential. – All Might (MHA)",
+  "You are the protagonist of your own story. Act like it!",
+  "Rest if you must, but don't you ever quit.",
+  "Your future is created by what you do today, not tomorrow.",
   "Plus Ultra! – All Might",
-  "Do or do not, there is no try. – Various",
-  "Even the smallest person can change the course of the future. – Various",
-  "It's not the strength of the body, but the strength of the spirit. – Various",
-  // --- STUDY / GENERAL WISDOM ---
+  "Even the smallest person can change the course of the future.",
+  "It's not the strength of the body, but the strength of the spirit.",
+  // Original study quotes
   "Success is the sum of small efforts repeated day in and day out.",
   "Don't study until you get it right. Study until you can't get it wrong.",
   "The secret of getting ahead is getting started.",
@@ -81,10 +118,12 @@ const motivationQuotes = [
   "Study because knowledge is power. Study because understanding is freedom.",
   "The more you learn, the more you realize how much you don't know – and that's a good thing.",
   "There is no elevator to success. You have to take the stairs.",
+  "Success usually comes to those who are too busy to be looking for it.",
   "Champions are made in the hours that no one is watching.",
   "The only way to do great work is to love what you do.",
   "Your future depends on what you do today.",
   "The best way to predict the future is to create it.",
+  "Hard work beats talent when talent doesn't work hard.",
   "Never give up on something you can't go a day without thinking about.",
   "It's not about perfect. It's about effort.",
   "If you want to fly, you have to give up the things that weigh you down.",
@@ -109,7 +148,6 @@ const motivationQuotes = [
   "No matter how slow you go, you are still lapping everyone on the couch.",
   "Be so good they can't ignore you.",
   "Great minds discuss ideas; average minds discuss events; small minds discuss people.",
-  "The secret to getting ahead is getting started.",
   "Fall seven times, stand up eight.",
   "Success is not for the lazy.",
   "The road to success is always under construction.",
@@ -121,14 +159,11 @@ const motivationQuotes = [
   "Don't count the days, make the days count.",
   "Prove them wrong. Prove yourself right.",
   "It's okay to not know everything. It's not okay to not try.",
-  "The only source of knowledge is experience.",
   "To succeed, you need to find something to hold on to, something to motivate you, something to inspire you.",
-  "Success is the progressive realization of a worthy goal.",
   "Desire is the key to motivation.",
   "Without hard work, nothing grows but weeds.",
   "The best preparation for tomorrow is doing your best today.",
   "Your limitation—it's only your imagination.",
-  "Push yourself, because no one else is going to do it for you.",
   "Sometimes later becomes never. Do it now.",
   "Great things take time.",
   "Don't stop when you're tired. Stop when you're done.",
@@ -150,22 +185,12 @@ const motivationQuotes = [
   "Knowledge is power. Knowledge is freedom. Knowledge is the key to your future.",
   "One book, one pen, one child, and one teacher can change the world.",
   "Education is the most powerful weapon you can use to change the world.",
-  "The future depends on what you do today.",
   "Today's learners are tomorrow's leaders.",
   "Learning is a treasure that will follow its owner everywhere.",
-  "Education is not preparation for life; education is life itself.",
-  "Your education is your ticket to the future. Don't leave it at the gate.",
-  "The more you read, the more things you will know. The more you learn, the more places you'll go.",
-  // --- EXTRA (Solo Leveling / System vibe) ---
-  "Arise, and become stronger. – Sung Jin‑Woo",
-  "The system rewards those who never stop leveling up.",
-  "Every failure is just a quest you haven't completed yet.",
-  "Your potential is your greatest weapon – sharpen it daily.",
-  "A true hunter never fears the grind.",
-  "The dungeon of exams is your final boss. Prepare accordingly."
+  "Education is not preparation for life; education is life itself."
 ];
 
-// ----- 4. GET 3 RANDOM QUOTES for the motivation block -----
+// Get 3 random quotes for motivation boost
 function getRandomMotivationQuotes() {
   const shuffled = [...motivationQuotes];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -175,36 +200,44 @@ function getRandomMotivationQuotes() {
   return shuffled.slice(0, 3);
 }
 
-// ----- 5. PRIORITY LOGIC – UPDATED (more realistic, with cap) -----
+// ----- PRIORITY LOGIC (based on days remaining) -----
+// Base study time per week per subject (in minutes)
+// The further the exam, the less time you study per week.
+// As days decrease, study time increases linearly.
+
 function getPriority(mark, days) {
-  // Base minutes – more realistic ranges
-  let baseTime = 15; // default for high scorers
-  if (mark < 35) baseTime = 50;
-  else if (mark < 55) baseTime = 40;
-  else if (mark < 70) baseTime = 25;
-  else baseTime = 12;
+  // Base weekly minutes by grade (independent of days)
+  let baseWeekly = 60; // default: 1 hour/week
+  if (mark < 40) baseWeekly = 150;  // 2.5 hrs/week (HIGH)
+  else if (mark < 60) baseWeekly = 100; // ~1.7 hrs/week (MEDIUM)
+  else if (mark < 75) baseWeekly = 70;  // ~1.2 hrs/week (LOW)
+  else baseWeekly = 45;  // VERY LOW
 
-  // Urgency factor – smaller multiplier so it doesn't explode
-  let urgency = 1;
-  if (days <= 3) urgency = 1.4;   // +40% if exam is very soon
-  else if (days <= 7) urgency = 1.2; // +20% if within a week
-  else urgency = 1; // normal pace
+  // Adjust based on days remaining (multiplier)
+  // If days = 0 (exam tomorrow), multiplier = 2.0 (double intensity)
+  // If days = 60+ (far away), multiplier = 0.6 (reduce intensity)
+  let multiplier = 1.0;
+  if (days <= 3) multiplier = 2.0;
+  else if (days <= 7) multiplier = 1.7;
+  else if (days <= 14) multiplier = 1.5;
+  else if (days <= 21) multiplier = 1.3;
+  else if (days <= 30) multiplier = 1.1;
+  else if (days <= 45) multiplier = 0.9;
+  else multiplier = 0.7; // far away
 
-  let finalTime = Math.round(baseTime * urgency);
+  const weeklyMinutes = Math.round(baseWeekly * multiplier);
 
-  // Cap individual subject time at 90 minutes (no one should study 1 subject for 2+ hours daily)
-  if (finalTime > 90) finalTime = 90;
-
+  // Priority level (based on mark only)
   let level, colorClass;
-  if (mark < 35) { level = 'HIGH PRIORITY'; colorClass = 'priority-high'; }
-  else if (mark < 55) { level = 'MEDIUM PRIORITY'; colorClass = 'priority-medium'; }
-  else if (mark < 70) { level = 'LOW PRIORITY'; colorClass = 'priority-low'; }
+  if (mark < 40) { level = 'HIGH PRIORITY'; colorClass = 'priority-high'; }
+  else if (mark < 60) { level = 'MEDIUM PRIORITY'; colorClass = 'priority-medium'; }
+  else if (mark < 75) { level = 'LOW PRIORITY'; colorClass = 'priority-low'; }
   else { level = 'VERY LOW'; colorClass = 'priority-low'; }
 
-  return { level, colorClass, time: finalTime };
+  return { level, colorClass, weeklyMinutes };
 }
 
-// ----- 6. MAIN ANALYSIS FUNCTION – generates the study plan -----
+// ----- MAIN ANALYSIS FUNCTION -----
 function analyze() {
   const name = nameInput.value.trim() || 'Student';
   const days = Number(daysInput.value.trim());
@@ -213,16 +246,23 @@ function analyze() {
     return;
   }
 
-  // Collect subjects & grades from the 7 slots
+  // Collect subjects and grades
   const subjects = {};
+  let filledSlots = 0;
   let isValid = true;
   let errors = [];
 
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     const subjInput = document.getElementById(`subject-${i}`);
     const gradeInput = document.getElementById(`grade-${i}`);
-    const subjectName = subjInput.value.trim();
+    let subjectName = subjInput.value.trim();
     const gradeVal = gradeInput.value.trim();
+
+    // Auto-correct subject name
+    if (subjectName !== '') {
+      subjectName = autoCorrectSubject(subjectName);
+      subjInput.value = subjectName; // update field
+    }
 
     if (subjectName !== '' && gradeVal === '') {
       isValid = false;
@@ -236,6 +276,7 @@ function analyze() {
     }
     if (subjectName === '' && gradeVal === '') continue;
 
+    filledSlots++;
     const grade = Number(gradeVal);
     if (isNaN(grade) || grade < 0 || grade > 100) {
       isValid = false;
@@ -245,72 +286,76 @@ function analyze() {
     subjects[subjectName] = grade;
   }
 
-  if (!isValid || Object.keys(subjects).length === 0) {
-    let output = `<h2>⚠️ INCOMPLETE REGISTER</h2>`;
+  // Minimum 3 slots required
+  if (filledSlots < 3) {
+    resultsDiv.innerHTML = `<h2>⚠️ INSUFFICIENT DATA</h2><p>Please enter at least <b>3 subjects</b> with their grades.</p>`;
+    return;
+  }
+
+  if (!isValid) {
+    let output = `<h2>⚠️ INPUT ERRORS</h2>`;
     if (errors.length) output += `<ul style="color:#ff6b6b;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
-    if (Object.keys(subjects).length === 0 && errors.length === 0) output += `<p>Please enter at least one subject and its grade.</p>`;
     resultsDiv.innerHTML = output;
     return;
   }
 
-  // Build the study plan
+  // Build output
   let output = `<h2>👋 HELLO, ${name.toUpperCase()}!</h2>`;
-  output += `<h3>📊 YOUR STUDY PLAN</h3>`;
+  output += `<h3>📊 YOUR WEEKLY STUDY PLAN</h3>`;
+  output += `<p style="color:#8899aa;">📅 Exam in <b>${days}</b> day${days !== 1 ? 's' : ''}.</p>`;
 
   let weakest = '';
   let lowestMark = 101;
-  let totalMin = 0;
+  let totalWeekly = 0;
 
   for (const [subject, mark] of Object.entries(subjects)) {
-    const { level, colorClass, time } = getPriority(mark, days);
-    totalMin += time;
-    output += `<p><b>${subject}</b>: <span class="${colorClass}">${level}</span> – Study <b>${time}</b> min/day</p>`;
+    const { level, colorClass, weeklyMinutes } = getPriority(mark, days);
+    totalWeekly += weeklyMinutes;
+    output += `<p><b>${subject}</b>: <span class="${colorClass}">${level}</span> – Study <b>${weeklyMinutes}</b> min/week</p>`;
     if (mark < lowestMark) {
       lowestMark = mark;
       weakest = subject;
     }
   }
 
-  // ----- MOTIVATION BOOST (3 random quotes) -----
+  // Motivation Boost
   const quotes = getRandomMotivationQuotes();
   output += `<div class="motivation-block">`;
   output += `<h3>💥 MOTIVATION BOOST</h3>`;
-  output += `<p>🔴 Your weakest link is <b>${weakest}</b> (${lowestMark}%). But that's where you grow the most!</p>`;
+  output += `<p>🔴 Your weakest link is <b>${weakest}</b> (${lowestMark}%). That's where you grow the most!</p>`;
   output += `<p>📢 <i>"${quotes[0]}"</i></p>`;
   output += `<p>🔥 <i>"${quotes[1]}"</i></p>`;
   output += `<p>🌟 <i>"${quotes[2]}"</i></p>`;
   output += `</div>`;
 
-  // ----- Exam urgency -----
+  // Exam urgency message
   output += `<h3>⏳ EXAM COUNTDOWN (${days} days)</h3>`;
   if (days <= 3) {
-    output += `<p>⚠️ <span style="color:#ff4a6a;">ULTRA URGENT:</span> Final stretch! Study for at least 4 hours daily.</p>`;
+    output += `<p>⚠️ <span style="color:#ff2a75;">ULTRA URGENT:</span> Final stretch! This is your last push.</p>`;
   } else if (days <= 7) {
-    output += `<p>📅 One week left. Create a strict daily schedule.</p>`;
+    output += `<p>📅 One week left. Focus on your weakest subjects.</p>`;
   } else if (days <= 14) {
-    output += `<p>📆 You have 2 weeks. Start focusing on your weak areas.</p>`;
+    output += `<p>📆 Two weeks left. Build a daily revision habit.</p>`;
+  } else if (days <= 30) {
+    output += `<p>📅 You have about a month. Start a consistent weekly schedule.</p>`;
   } else {
-    output += `<p>✅ You have enough time. Build a solid foundation.</p>`;
+    output += `<p>✅ You have plenty of time. Build a strong foundation now.</p>`;
   }
 
-  // ----- Recommended revision order (weakest to strongest) -----
+  // Recommended order (weakest to strongest)
   const sorted = Object.entries(subjects).sort((a, b) => a[1] - b[1]);
   const order = sorted.map(([subj]) => subj).join(' → ');
   output += `<p><b>Recommended revision order:</b> ${order}</p>`;
 
-  // ----- Total daily study time – WITH CAP (new) -----
-  let finalTotal = totalMin;
-  let capMessage = '';
-  if (totalMin > 300) {
-    finalTotal = 300;
-    capMessage = ` (⚠️ Capped at 300 min / 5 hours. Focus on your weakest 4 subjects first, then rotate.)`;
-  }
-  output += `<p>📊 <b>Total daily study time:</b> ${finalTotal} minutes (${Math.round(finalTotal/60)} hours)${capMessage}.</p>`;
+  // Total weekly time
+  const hours = Math.round(totalWeekly / 60);
+  const mins = totalWeekly % 60;
+  output += `<p>📊 <b>Total weekly study time:</b> ${totalWeekly} minutes (${hours}h ${mins}m).</p>`;
 
-  // ----- Save data to localStorage -----
+  // Save data
   localStorage.setItem('studyAssistant_name', name);
   localStorage.setItem('studyAssistant_days', daysInput.value);
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     localStorage.setItem(`studyAssistant_subj_${i}`, document.getElementById(`subject-${i}`).value.trim());
     localStorage.setItem(`studyAssistant_grade_${i}`, document.getElementById(`grade-${i}`).value.trim());
   }
@@ -318,13 +363,13 @@ function analyze() {
   resultsDiv.innerHTML = output;
 }
 
-// ----- 7. LOAD SAVED DATA from localStorage on page load -----
+// ----- LOAD SAVED DATA -----
 function loadSavedData() {
   const savedName = localStorage.getItem('studyAssistant_name');
   if (savedName) nameInput.value = savedName;
   const savedDays = localStorage.getItem('studyAssistant_days');
   if (savedDays) daysInput.value = savedDays;
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     const savedSubj = localStorage.getItem(`studyAssistant_subj_${i}`);
     const savedGrade = localStorage.getItem(`studyAssistant_grade_${i}`);
     if (savedSubj) document.getElementById(`subject-${i}`).value = savedSubj;
@@ -332,12 +377,12 @@ function loadSavedData() {
   }
 }
 
-// ----- 8. CLEAR ALL DATA (with confirmation) -----
+// ----- CLEAR ALL -----
 function clearAll() {
   if (!confirm('Reset the System? All data will be lost!')) return;
   nameInput.value = '';
   daysInput.value = '';
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     document.getElementById(`subject-${i}`).value = '';
     document.getElementById(`grade-${i}`).value = '';
   }
@@ -345,34 +390,38 @@ function clearAll() {
   localStorage.clear();
 }
 
-// ----- 9. PRINT STUDY PLAN (opens a new window) -----
+// ----- PRINT SCROLL (prints exact current display) -----
 function printResults() {
   const content = resultsDiv.innerHTML;
-  if (!content || content.includes('ERROR') || content.includes('INCOMPLETE')) {
+  if (!content || content.includes('ERROR') || content.includes('INSUFFICIENT')) {
     alert('Please run the analysis first to generate your scroll!');
     return;
   }
-  const win = window.open('', '', 'width=800,height=600');
+  const win = window.open('', '', 'width=1000,height=700');
   win.document.write(`
     <html><head><title>My Study Scroll</title>
     <style>
-      body { font-family: 'Segoe UI', sans-serif; padding: 2rem; background: #0b0a16; color: #d0dce8; }
-      .priority-high { color: #ff4a6a; font-weight:700; }
-      .priority-medium { color: #ffd04a; font-weight:700; }
-      .priority-low { color: #00d4ff; font-weight:700; }
-      .motivation-block { background: #1a1a2e; padding:1rem; border-radius:16px; border-left:4px solid #00c8ff; }
+      body { font-family: 'Segoe UI', 'Inter', sans-serif; padding: 2rem; background: #0a0a12; color: #b0c8dd; }
+      h1, h2, h3 { color: #d4af37; }
+      .priority-high { color: #ff2a75; font-weight:700; background: #221122; padding: 2px 12px; border-radius:20px; border-left:3px solid #ff2a75; display:inline-block; }
+      .priority-medium { color: #d4af37; font-weight:700; background: #221f11; padding: 2px 12px; border-radius:20px; border-left:3px solid #d4af37; display:inline-block; }
+      .priority-low { color: #00f0ff; font-weight:700; background: #001a22; padding: 2px 12px; border-radius:20px; border-left:3px solid #00f0ff; display:inline-block; }
+      .motivation-block { background: #0f0a1a; padding: 15px; border-radius: 16px; border: 1px dashed #d4af37; margin-top: 15px; font-style: italic; }
+      .results-card { background: #0a0c18; padding: 20px; border-radius: 24px; border: 1px solid #1a1a2e; }
     </style>
     </head><body>
     <h1>📜 My Personal Study Scroll</h1>
-    ${content}
-    <p><em>Generated by STUDY DOJO · SYSTEM ACTIVATED</em></p>
+    <div class="results-card">
+      ${content}
+    </div>
+    <p style="margin-top:20px; color:#445566;"><em>Generated by Study Dojo · System v2.0</em></p>
     </body></html>
   `);
   win.document.close();
   win.print();
 }
 
-// ----- 10. EVENT LISTENERS for buttons -----
+// ----- EVENT LISTENERS -----
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('clearBtn').addEventListener('click', clearAll);
 document.getElementById('printBtn').addEventListener('click', printResults);
@@ -382,141 +431,5 @@ document.querySelectorAll('input').forEach(inp => inp.addEventListener('keypress
   if (e.key === 'Enter') analyze();
 }));
 
-// ----- 11. LOAD DATA when page starts -----
+// Load saved data on start
 window.addEventListener('DOMContentLoaded', loadSavedData);
-
-// ================================================================
-// ====== FOCUS AREAS (only TWO) ===================================
-// ================================================================
-
-// ---------- A. COMMUNICATION TECHNOLOGY – IoT Dashboard ----------
-let iotDevices = {
-  lamp: true,
-  watch: true,
-  headphone: true
-};
-
-function updateIoTUI() {
-  const lampEl = document.getElementById('lampStatus');
-  const watchEl = document.getElementById('watchStatus');
-  const headEl = document.getElementById('headphoneStatus');
-  
-  lampEl.textContent = iotDevices.lamp ? 'ONLINE' : 'OFFLINE';
-  lampEl.className = iotDevices.lamp ? 'status-online' : 'status-offline';
-  
-  watchEl.textContent = iotDevices.watch ? 'ONLINE' : 'OFFLINE';
-  watchEl.className = iotDevices.watch ? 'status-online' : 'status-offline';
-  
-  headEl.textContent = iotDevices.headphone ? 'ONLINE' : 'OFFLINE';
-  headEl.className = iotDevices.headphone ? 'status-online' : 'status-offline';
-}
-
-document.getElementById('toggleLamp').addEventListener('click', () => { iotDevices.lamp = !iotDevices.lamp; updateIoTUI(); });
-document.getElementById('toggleWatch').addEventListener('click', () => { iotDevices.watch = !iotDevices.watch; updateIoTUI(); });
-document.getElementById('toggleHeadphone').addEventListener('click', () => { iotDevices.headphone = !iotDevices.headphone; updateIoTUI(); });
-
-// ---------- B. INDUSTRIAL & PROFESSIONAL – Component Inventory ----------
-function loadComponents() {
-  const comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
-  const list = document.getElementById('componentList');
-  if (comps.length === 0) {
-    list.innerHTML = '<p style="color:#445566;">No components added yet.</p>';
-    return;
-  }
-  list.innerHTML = comps.map((comp, idx) => `
-    <div class="comp-item">
-      <span><b>${comp.name}</b> (${comp.spec}) — Qty: ${comp.qty}</span>
-      <button class="del-btn" data-idx="${idx}">✕</button>
-    </div>
-  `).join('');
-  document.querySelectorAll('#componentList .del-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      let comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
-      comps.splice(this.dataset.idx, 1);
-      localStorage.setItem('componentInventory', JSON.stringify(comps));
-      loadComponents();
-    });
-  });
-}
-
-document.getElementById('addCompBtn').addEventListener('click', function() {
-  const name = document.getElementById('compName').value.trim();
-  const spec = document.getElementById('compSpec').value.trim() || 'N/A';
-  const qty = parseInt(document.getElementById('compQty').value) || 0;
-  if (!name) return alert('Enter a component name.');
-  const comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
-  comps.push({ name, spec, qty });
-  localStorage.setItem('componentInventory', JSON.stringify(comps));
-  document.getElementById('compName').value = '';
-  document.getElementById('compSpec').value = '';
-  document.getElementById('compQty').value = '';
-  loadComponents();
-});
-
-// ---------- C. BACKUP & RESTORE (cross‑device sync) ----------
-function exportData() {
-  const data = {
-    studyAssistant_name: localStorage.getItem('studyAssistant_name'),
-    studyAssistant_days: localStorage.getItem('studyAssistant_days'),
-    componentInventory: JSON.parse(localStorage.getItem('componentInventory') || '[]'),
-    subjects: {},
-    grades: {}
-  };
-  for (let i = 1; i <= 7; i++) {
-    data.subjects[`subject-${i}`] = localStorage.getItem(`studyAssistant_subj_${i}`) || '';
-    data.grades[`grade-${i}`] = localStorage.getItem(`studyAssistant_grade_${i}`) || '';
-  }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'study_dojo_backup.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importData(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.studyAssistant_name) localStorage.setItem('studyAssistant_name', data.studyAssistant_name);
-      if (data.studyAssistant_days) localStorage.setItem('studyAssistant_days', data.studyAssistant_days);
-      if (data.componentInventory) localStorage.setItem('componentInventory', JSON.stringify(data.componentInventory));
-      if (data.subjects) {
-        for (let i = 1; i <= 7; i++) {
-          const key = `studyAssistant_subj_${i}`;
-          if (data.subjects[`subject-${i}`] !== undefined) localStorage.setItem(key, data.subjects[`subject-${i}`]);
-        }
-      }
-      if (data.grades) {
-        for (let i = 1; i <= 7; i++) {
-          const key = `studyAssistant_grade_${i}`;
-          if (data.grades[`grade-${i}`] !== undefined) localStorage.setItem(key, data.grades[`grade-${i}`]);
-        }
-      }
-      alert('Data imported successfully! Refresh to see all your data.');
-      loadSavedData();
-      loadComponents();
-      updateIoTUI();
-    } catch (err) {
-      alert('Failed to import. Check the file format.');
-    }
-  };
-  reader.readAsText(file);
-}
-
-document.getElementById('exportBtn').addEventListener('click', exportData);
-document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
-document.getElementById('importFile').addEventListener('change', function(e) {
-  if (this.files.length) {
-    importData(this.files[0]);
-    this.value = '';
-  }
-});
-
-// ---------- D. LOAD EXTRA DATA on start ----------
-document.addEventListener('DOMContentLoaded', function() {
-  loadComponents();
-  updateIoTUI();
-});
