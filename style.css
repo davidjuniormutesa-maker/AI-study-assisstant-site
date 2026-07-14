@@ -1,106 +1,133 @@
-/* ================================================================
-   STUDY DOJO – SYSTEM STYLE (Sung Jin‑Woo inspired)
-   Dark, minimal, with cyan/blue UI accents and glitch effects.
-   ================================================================ */
+/* ======================================================
+   STUDY DOJO - SYSTEM UI
+   Inspired by Sung Jin-Woo's system from Solo Leveling
+   Dark, glitchy, flickering, futuristic
+   ====================================================== */
 
-/* ----- reset ----- */
+/* ----- RESET & BASE ----- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* ----- body – deep dark background with subtle glow ----- */
 body {
-  background: #070a0f;
-  background-image: radial-gradient(circle at 30% 20%, #0f1a2a 0%, #04070b 90%);
-  font-family: 'Inter', Arial, sans-serif;
-  color: #d0dce8;
+  font-family: 'Inter', sans-serif;
+  background: #0a0a12; /* deep dark blue-black */
+  background-image: radial-gradient(circle at 30% 40%, #111a2e 0%, #05070d 90%);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 20px;
+  padding: 2rem 1rem;
+  color: #b0c8dd;
+  /* Glitch effect overlay (scanlines) */
+  position: relative;
 }
 
-/* ----- main system panel – floating, transparent, with border glow ----- */
-.system-panel {
-  background: rgba(10, 16, 26, 0.85);
-  backdrop-filter: blur(4px);
-  max-width: 960px;
+/* ----- SCANLINE OVERLAY (glitch effect) ----- */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  border-radius: 28px;
-  padding: 30px 25px;
-  border: 1px solid rgba(0, 180, 255, 0.25);
-  box-shadow: 0 0 40px rgba(0, 180, 255, 0.06), inset 0 0 60px rgba(0, 0, 0, 0.6);
-  animation: panelFadeIn 0.8s ease;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 240, 255, 0.03) 0px,
+    rgba(0, 240, 255, 0.03) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  z-index: 9999;
+  animation: scanlines 0.2s linear infinite;
 }
 
-@keyframes panelFadeIn {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(6px); }
 }
 
-/* ----- header – glitchy text, system style ----- */
+/* ----- MAIN CONTAINER (System Window) ----- */
+.container {
+  background: rgba(10, 12, 22, 0.92);
+  backdrop-filter: blur(4px);
+  max-width: 980px;
+  width: 100%;
+  border-radius: 32px;
+  padding: 2.5rem 2rem;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.8);
+  position: relative;
+  /* glitch flicker on container */
+  animation: containerFlicker 3s infinite;
+}
+
+@keyframes containerFlicker {
+  0%, 95%, 100% { opacity: 1; }
+  96% { opacity: 0.7; }
+  97% { opacity: 1; }
+  98% { opacity: 0.5; }
+  99% { opacity: 1; }
+}
+
+/* ----- HEADER (glitchy text) ----- */
 .dojo-header h1 {
   font-family: 'Orbitron', monospace;
   font-size: 2.4rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 3px;
-  color: #b0d0ff;
-  text-shadow: 0 0 8px rgba(0, 180, 255, 0.3);
-  text-align: center;
+  color: #d4af37; /* gold */
+  text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af3755;
+  margin-bottom: 0.2rem;
+  animation: glitchText 2.5s infinite;
 }
+
 .dojo-header h1 span {
-  color: #00e5ff;
-  text-shadow: 0 0 15px #00e5ff;
-}
-.dojo-header .subtitle {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #4a7a9a;
-  letter-spacing: 4px;
-  margin: 4px 0 10px 0;
-  font-family: 'Orbitron', monospace;
+  color: #00f0ff;
+  text-shadow: 0 0 10px #00f0ff;
 }
 
-/* ----- status line with glitch flicker ----- */
-.status-line {
-  text-align: center;
-  font-size: 0.75rem;
-  color: #2a6a8a;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
-  border-top: 1px solid #1a2a3a;
-  padding-top: 8px;
-  animation: glitchFlicker 2.2s infinite;
-}
-@keyframes glitchFlicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.3; }
-  95% { opacity: 1; }
-  96% { opacity: 0.6; }
-  97% { opacity: 1; }
+/* Glitch text flicker */
+@keyframes glitchText {
+  0%, 90%, 100% { transform: skew(0deg); opacity: 1; }
+  92% { transform: skew(2deg); opacity: 0.8; }
+  94% { transform: skew(-2deg); opacity: 0.9; }
+  96% { transform: skew(0deg); opacity: 1; }
 }
 
-/* ----- section headings – cyan underline ----- */
+.dojo-header p {
+  color: #8899bb;
+  border-left: 3px solid #d4af37;
+  padding-left: 1rem;
+  margin: 10px 0 20px 0;
+  font-size: 1.1rem;
+  animation: fadePulse 3s infinite;
+}
+
+@keyframes fadePulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* ----- SECTION HEADINGS ----- */
 h2 {
   font-family: 'Orbitron', monospace;
-  font-size: 1.05rem;
-  color: #00c8ff;
-  border-bottom: 2px solid #1a4a6a;
-  display: inline-block;
-  padding-bottom: 4px;
-  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #00f0ff;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 200, 255, 0.15);
+  border-bottom: 2px solid #d4af37;
+  display: inline-block;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 5px #00f0ff55;
 }
 
 .subtext {
-  color: #6a8a9a;
+  color: #667788;
   font-size: 0.9rem;
   margin-bottom: 15px;
 }
@@ -109,40 +136,46 @@ section {
   margin-bottom: 25px;
 }
 
-/* ----- labels – subtle cyan ----- */
+/* ----- LABELS & INPUTS (system-like) ----- */
 label {
   display: block;
   font-weight: 600;
-  color: #8ab0c8;
+  color: #99aabb;
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   margin-bottom: 4px;
 }
 
-/* ----- inputs – dark, with cyan focus glow ----- */
 input {
   padding: 10px 14px;
-  border: 1px solid #1a2a3a;
+  border: 1px solid #2a2a44;
   border-radius: 10px;
   font-size: 1rem;
-  background: #0a121c;
-  color: #d0dce8;
+  background: #0d0d1a;
+  color: #ddeeff;
   width: 100%;
   transition: 0.2s;
-}
-input:focus {
-  border-color: #00c8ff;
-  outline: none;
-  box-shadow: 0 0 12px rgba(0, 200, 255, 0.15);
+  font-family: 'Inter', sans-serif;
 }
 
-/* ----- subject grid (7 rows) ----- */
+input:focus {
+  border-color: #00f0ff;
+  outline: none;
+  box-shadow: 0 0 15px #00f0ff22, inset 0 0 10px #00f0ff11;
+}
+
+input::placeholder {
+  color: #445566;
+}
+
+/* ----- SUBJECT GRID (8 slots) ----- */
 .subject-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .subject-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -154,277 +187,160 @@ input:focus {
   max-width: 200px;
 }
 
-/* ----- buttons – system style ----- */
+/* ----- BUTTONS (system-style) ----- */
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
   margin: 20px 0 15px 0;
 }
+
 button {
   padding: 12px 20px;
-  border: none;
+  border: 1px solid #2a2a44;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   flex: 1 1 auto;
   min-width: 130px;
   text-transform: uppercase;
   font-family: 'Orbitron', monospace;
   letter-spacing: 1px;
-  transition: 0.15s;
+  background: #0d0d1a;
+  color: #99aabb;
+  transition: 0.2s;
 }
 
 #analyzeBtn {
-  background: #00aaff;
-  color: #04070b;
-  box-shadow: 0 0 20px rgba(0, 170, 255, 0.3);
+  background: #d4af37;
+  color: #0a0a12;
+  border-color: #d4af37;
+  box-shadow: 0 0 15px #d4af3755;
 }
 #analyzeBtn:hover {
-  background: #00ccff;
+  background: #f0c84a;
   transform: scale(1.02);
-  box-shadow: 0 0 30px #00aaff;
+  box-shadow: 0 0 30px #d4af37;
 }
 
 .clear {
-  background: #1a2a3a;
-  color: #8a9aaa;
+  background: #1a1a2e;
+  color: #8899aa;
 }
 .clear:hover {
-  background: #2a3a4a;
+  background: #2a2a44;
 }
 
 .print {
-  background: #d4b84a;
-  color: #0a0f14;
+  background: #00f0ff;
+  color: #0a0a12;
+  border-color: #00f0ff;
+  box-shadow: 0 0 15px #00f0ff33;
 }
 .print:hover {
-  background: #e8cc5a;
+  background: #55f5ff;
+  box-shadow: 0 0 30px #00f0ff;
 }
 
-/* ----- results card – dark with subtle border pulse ----- */
+/* ----- RESULTS CARD (glitchy display) ----- */
 .results-card {
   margin-top: 20px;
   padding: 20px;
-  background: #0a121c;
-  border-radius: 20px;
-  border: 1px solid #1a2a3a;
+  background: #0a0c18;
+  border-radius: 24px;
+  border: 1px solid #1a1a2e;
   min-height: 100px;
-  line-height: 1.7;
-  animation: borderPulse 3s infinite;
+  line-height: 1.8;
+  animation: resultGlitch 4s infinite;
 }
-@keyframes borderPulse {
-  0%, 100% { border-color: #1a2a3a; }
-  50% { border-color: #2a5a7a; }
+
+@keyframes resultGlitch {
+  0%, 95%, 100% { opacity: 1; border-color: #1a1a2e; }
+  96% { opacity: 0.6; border-color: #d4af37; }
+  97% { opacity: 1; border-color: #1a1a2e; }
+  98% { opacity: 0.4; border-color: #00f0ff; }
+  99% { opacity: 1; border-color: #1a1a2e; }
 }
 
 .results-card h2 {
   border-bottom: none;
   display: block;
-  color: #d4b84a;
+  color: #d4af37;
 }
+
 .results-card h3 {
-  color: #00c8ff;
+  color: #00f0ff;
   margin-top: 15px;
   font-family: 'Orbitron', monospace;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
+
 .results-card p {
   margin: 8px 0;
 }
 
-/* ----- priority badges (colours stay: red, yellow, cyan) ----- */
+/* ----- PRIORITY BADGES ----- */
 .results-card .priority-high {
-  color: #ff4a6a;
-  font-weight: bold;
-  background: #1a0a12;
-  padding: 2px 14px;
+  color: #ff2a75;
+  font-weight: 700;
+  background: #221122;
+  padding: 2px 12px;
   border-radius: 20px;
-  border-left: 3px solid #ff4a6a;
+  border-left: 3px solid #ff2a75;
   display: inline-block;
 }
 .results-card .priority-medium {
-  color: #ffd04a;
-  font-weight: bold;
-  background: #1a1a0a;
-  padding: 2px 14px;
+  color: #d4af37;
+  font-weight: 700;
+  background: #221f11;
+  padding: 2px 12px;
   border-radius: 20px;
-  border-left: 3px solid #ffd04a;
+  border-left: 3px solid #d4af37;
   display: inline-block;
 }
 .results-card .priority-low {
-  color: #00d4ff;
-  font-weight: bold;
-  background: #0a1a22;
-  padding: 2px 14px;
+  color: #00f0ff;
+  font-weight: 700;
+  background: #001a22;
+  padding: 2px 12px;
   border-radius: 20px;
-  border-left: 3px solid #00d4ff;
+  border-left: 3px solid #00f0ff;
   display: inline-block;
 }
 
-/* ----- motivation block – system message style ----- */
-.results-card .motivation-block {
-  background: #0a1622;
+.motivation-block {
+  background: #0f0a1a;
   padding: 15px;
   border-radius: 16px;
-  border: 1px dashed #1a4a6a;
+  border: 1px dashed #d4af37;
   margin-top: 15px;
   font-style: italic;
-  color: #b0d0e8;
+  color: #cce0ee;
+  animation: motGlow 3s infinite alternate;
 }
 
-/* ============================================================
-   FOCUS AREAS (IoT & Component Inventory)
-   ============================================================ */
-
-hr {
-  border: 1px solid #0a1a2a;
-  margin: 25px 0;
+@keyframes motGlow {
+  0% { border-color: #d4af37; box-shadow: 0 0 5px #d4af3722; }
+  100% { border-color: #00f0ff; box-shadow: 0 0 15px #00f0ff22; }
 }
 
-/* ----- IoT grid ----- */
-.iot-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  background: #0a121c;
-  padding: 15px;
-  border-radius: 16px;
-  border: 1px solid #1a2a3a;
-}
-.iot-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.iot-item b {
-  color: #8ab0c8;
-  min-width: 110px;
-}
-.iot-item .status-online {
-  color: #00d4ff;
-  font-weight: bold;
-  font-size: 0.8rem;
-  background: #0a1a2a;
-  padding: 2px 12px;
-  border-radius: 30px;
-  border: 1px solid #00d4ff40;
-}
-.iot-item .status-offline {
-  color: #ff4a6a;
-  font-weight: bold;
-  font-size: 0.8rem;
-  background: #1a0a12;
-  padding: 2px 12px;
-  border-radius: 30px;
-  border: 1px solid #ff4a6a40;
-}
-.iot-toggle {
-  background: #1a2a3a;
-  color: #8ab0c8;
-  border: none;
-  padding: 4px 16px;
-  border-radius: 30px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  min-width: auto;
-}
-.iot-toggle:hover {
-  background: #2a3a4a;
-  color: #c0d8e8;
-}
-
-/* ----- component inventory ----- */
-.comp-input-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 0.8fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.add-btn {
-  background: #00aaff;
-  color: #04070b;
-  font-weight: bold;
-  border: none;
-  border-radius: 30px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  min-width: auto;
-}
-.add-btn:hover {
-  background: #00ccff;
-}
-
-.inventory-list {
-  background: #0a121c;
-  padding: 10px;
-  border-radius: 16px;
-  border: 1px solid #1a2a3a;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.comp-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 12px;
-  background: #0e1a26;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.comp-item .del-btn {
-  background: #ff4a6a;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 2px 14px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.7rem;
-  font-family: Arial, sans-serif;
-}
-
-/* ----- backup buttons ----- */
-.backup-btn {
-  background: #1a2a3a;
-  color: #8ab0c8;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 30px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-}
-.backup-btn:hover {
-  background: #2a3a4a;
-  color: #c0d8e8;
-}
-
-/* ----- footer ----- */
+/* ----- FOOTER ----- */
 footer {
   margin-top: 30px;
-  font-size: 0.75rem;
-  color: #3a5a6a;
+  font-size: 0.8rem;
+  color: #445566;
   text-align: center;
-  border-top: 1px solid #0a1a2a;
+  border-top: 1px solid #1a1a2e;
   padding-top: 15px;
-  font-family: 'Orbitron', monospace;
-  letter-spacing: 1px;
+  animation: fadePulse 4s infinite;
 }
 
-/* ----- responsive for phones ----- */
+/* ----- RESPONSIVE (phones) ----- */
 @media (max-width: 600px) {
-  .system-panel { padding: 20px; }
+  .container { padding: 20px; }
   .subject-row { grid-template-columns: 1fr; gap: 8px; }
   .dojo-header h1 { font-size: 1.6rem; }
   .actions { flex-direction: column; }
   button { width: 100%; }
-  .comp-input-row { grid-template-columns: 1fr; }
-  .iot-grid { flex-direction: column; }
 }
