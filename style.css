@@ -1,21 +1,21 @@
-/* ============================================================
-   MY FIRST CSS FILE – I'm still learning!
-   This styles the Anime Study Dojo.
-   ============================================================ */
+/* ================================================================
+   STUDY DOJO – SYSTEM STYLE (Sung Jin‑Woo inspired)
+   Dark, minimal, with cyan/blue UI accents and glitch effects.
+   ================================================================ */
 
-/* ----- RESET default margins and paddings ----- */
+/* ----- reset ----- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* ----- BODY – dark background with a neon glow ----- */
+/* ----- body – deep dark background with subtle glow ----- */
 body {
-  background: #0b0a16;
-  background-image: radial-gradient(circle at 20% 30%, #1a1433 0%, #0a0815 90%);
+  background: #070a0f;
+  background-image: radial-gradient(circle at 30% 20%, #0f1a2a 0%, #04070b 90%);
   font-family: 'Inter', Arial, sans-serif;
-  color: #e2e8f0;
+  color: #d0dce8;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -23,85 +23,121 @@ body {
   padding: 20px;
 }
 
-/* ----- MAIN CONTAINER – the card that holds everything ----- */
-.container {
-  background: #12101e;
-  max-width: 950px;
+/* ----- main system panel – floating, transparent, with border glow ----- */
+.system-panel {
+  background: rgba(10, 16, 26, 0.85);
+  backdrop-filter: blur(4px);
+  max-width: 960px;
   width: 100%;
-  border-radius: 30px;
+  border-radius: 28px;
   padding: 30px 25px;
-  border: 1px solid #2a2a44;
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 180, 255, 0.25);
+  box-shadow: 0 0 40px rgba(0, 180, 255, 0.06), inset 0 0 60px rgba(0, 0, 0, 0.6);
+  animation: panelFadeIn 0.8s ease;
 }
 
-/* ----- HEADER styles ----- */
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- header – glitchy text, system style ----- */
 .dojo-header h1 {
   font-family: 'Orbitron', monospace;
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #ffdd00;
-  text-shadow: 0 0 10px #ff2a75;
+  letter-spacing: 3px;
+  color: #b0d0ff;
+  text-shadow: 0 0 8px rgba(0, 180, 255, 0.3);
+  text-align: center;
 }
 .dojo-header h1 span {
-  color: #00f0ff;
+  color: #00e5ff;
+  text-shadow: 0 0 15px #00e5ff;
 }
-.dojo-header p {
-  color: #a0b4c8;
-  border-left: 4px solid #ffdd00;
-  padding-left: 15px;
-  margin: 10px 0 20px 0;
+.dojo-header .subtitle {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #4a7a9a;
+  letter-spacing: 4px;
+  margin: 4px 0 10px 0;
+  font-family: 'Orbitron', monospace;
 }
 
-/* ----- SECTION HEADINGS ----- */
+/* ----- status line with glitch flicker ----- */
+.status-line {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #2a6a8a;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  border-top: 1px solid #1a2a3a;
+  padding-top: 8px;
+  animation: glitchFlicker 2.2s infinite;
+}
+@keyframes glitchFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.3; }
+  95% { opacity: 1; }
+  96% { opacity: 0.6; }
+  97% { opacity: 1; }
+}
+
+/* ----- section headings – cyan underline ----- */
 h2 {
   font-family: 'Orbitron', monospace;
-  font-size: 1.1rem;
-  color: #00f0ff;
-  border-bottom: 3px solid #ff2a75;
+  font-size: 1.05rem;
+  color: #00c8ff;
+  border-bottom: 2px solid #1a4a6a;
   display: inline-block;
-  padding-bottom: 5px;
+  padding-bottom: 4px;
   margin-bottom: 15px;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(0, 200, 255, 0.15);
 }
+
 .subtext {
-  color: #8899aa;
+  color: #6a8a9a;
   font-size: 0.9rem;
   margin-bottom: 15px;
 }
 
-/* ----- SPACING between sections ----- */
 section {
   margin-bottom: 25px;
 }
 
-/* ----- LABELS for inputs ----- */
+/* ----- labels – subtle cyan ----- */
 label {
   display: block;
-  font-weight: bold;
-  color: #b0c8dd;
-  font-size: 0.85rem;
-  margin-bottom: 5px;
+  font-weight: 600;
+  color: #8ab0c8;
+  font-size: 0.75rem;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
 }
 
-/* ----- TEXT INPUTS & NUMBER INPUTS ----- */
+/* ----- inputs – dark, with cyan focus glow ----- */
 input {
-  padding: 10px 12px;
-  border: 2px solid #2a2a44;
-  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid #1a2a3a;
+  border-radius: 10px;
   font-size: 1rem;
-  background: #111122;
-  color: white;
+  background: #0a121c;
+  color: #d0dce8;
   width: 100%;
+  transition: 0.2s;
 }
 input:focus {
-  border-color: #00f0ff;
+  border-color: #00c8ff;
   outline: none;
+  box-shadow: 0 0 12px rgba(0, 200, 255, 0.15);
 }
 
-/* ----- SUBJECT GRID (7 rows) ----- */
+/* ----- subject grid (7 rows) ----- */
 .subject-grid {
   display: flex;
   flex-direction: column;
@@ -114,12 +150,11 @@ input:focus {
   align-items: center;
 }
 
-/* ----- EXAM DAYS INPUT – limit width ----- */
 .exam-section input {
   max-width: 200px;
 }
 
-/* ----- BUTTONS (main actions) ----- */
+/* ----- buttons – system style ----- */
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -130,8 +165,8 @@ button {
   padding: 12px 20px;
   border: none;
   border-radius: 30px;
-  font-weight: bold;
-  font-size: 1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
   cursor: pointer;
   flex: 1 1 auto;
   min-width: 130px;
@@ -141,186 +176,255 @@ button {
   transition: 0.15s;
 }
 
-/* ----- specific button colours ----- */
 #analyzeBtn {
-  background: #ff2a75;
-  color: white;
-  box-shadow: 0 0 15px #ff2a75;
+  background: #00aaff;
+  color: #04070b;
+  box-shadow: 0 0 20px rgba(0, 170, 255, 0.3);
 }
 #analyzeBtn:hover {
-  background: #ff0055;
+  background: #00ccff;
   transform: scale(1.02);
+  box-shadow: 0 0 30px #00aaff;
 }
 
 .clear {
-  background: #2a2a44;
-  color: #99aabb;
+  background: #1a2a3a;
+  color: #8a9aaa;
 }
 .clear:hover {
-  background: #3a3a5a;
+  background: #2a3a4a;
 }
 
 .print {
-  background: #ffdd00;
-  color: #0a0815;
+  background: #d4b84a;
+  color: #0a0f14;
 }
 .print:hover {
-  background: #ffea55;
+  background: #e8cc5a;
 }
 
-/* ----- RESULTS CARD (where the analysis appears) ----- */
+/* ----- results card – dark with subtle border pulse ----- */
 .results-card {
   margin-top: 20px;
   padding: 20px;
-  background: #0e0c1a;
-  border-radius: 24px;
-  border: 1px solid #2a2a44;
+  background: #0a121c;
+  border-radius: 20px;
+  border: 1px solid #1a2a3a;
   min-height: 100px;
   line-height: 1.7;
+  animation: borderPulse 3s infinite;
 }
+@keyframes borderPulse {
+  0%, 100% { border-color: #1a2a3a; }
+  50% { border-color: #2a5a7a; }
+}
+
 .results-card h2 {
   border-bottom: none;
   display: block;
-  color: #ffdd00;
+  color: #d4b84a;
 }
 .results-card h3 {
-  color: #00f0ff;
+  color: #00c8ff;
   margin-top: 15px;
   font-family: 'Orbitron', monospace;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 .results-card p {
   margin: 8px 0;
 }
 
-/* ----- PRIORITY BADGES (coloured) ----- */
+/* ----- priority badges (colours stay: red, yellow, cyan) ----- */
 .results-card .priority-high {
-  color: #ff2a75;
+  color: #ff4a6a;
   font-weight: bold;
-  background: #221122;
-  padding: 2px 12px;
+  background: #1a0a12;
+  padding: 2px 14px;
   border-radius: 20px;
-  border-left: 3px solid #ff2a75;
+  border-left: 3px solid #ff4a6a;
   display: inline-block;
 }
 .results-card .priority-medium {
-  color: #ffdd00;
+  color: #ffd04a;
   font-weight: bold;
-  background: #222011;
-  padding: 2px 12px;
+  background: #1a1a0a;
+  padding: 2px 14px;
   border-radius: 20px;
-  border-left: 3px solid #ffdd00;
+  border-left: 3px solid #ffd04a;
   display: inline-block;
 }
 .results-card .priority-low {
-  color: #00f0ff;
+  color: #00d4ff;
   font-weight: bold;
-  background: #001a22;
-  padding: 2px 12px;
+  background: #0a1a22;
+  padding: 2px 14px;
   border-radius: 20px;
-  border-left: 3px solid #00f0ff;
+  border-left: 3px solid #00d4ff;
   display: inline-block;
 }
 
-/* ----- MOTIVATION BLOCK (quotes) ----- */
+/* ----- motivation block – system message style ----- */
 .results-card .motivation-block {
-  background: #1a0f1f;
+  background: #0a1622;
   padding: 15px;
   border-radius: 16px;
-  border: 1px dashed #ff2a75;
+  border: 1px dashed #1a4a6a;
   margin-top: 15px;
   font-style: italic;
-  color: #ddeeff;
+  color: #b0d0e8;
 }
 
-/* ----- EXTRA MODULES (maintenance, components, IoT, wearable) ----- */
+/* ============================================================
+   FOCUS AREAS (IoT & Component Inventory)
+   ============================================================ */
+
 hr {
-  border: 1px solid #1a1a2e;
+  border: 1px solid #0a1a2a;
   margin: 25px 0;
 }
 
-#taskList, #componentList {
+/* ----- IoT grid ----- */
+.iot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  background: #0a121c;
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid #1a2a3a;
+}
+.iot-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.iot-item b {
+  color: #8ab0c8;
+  min-width: 110px;
+}
+.iot-item .status-online {
+  color: #00d4ff;
+  font-weight: bold;
+  font-size: 0.8rem;
+  background: #0a1a2a;
+  padding: 2px 12px;
+  border-radius: 30px;
+  border: 1px solid #00d4ff40;
+}
+.iot-item .status-offline {
+  color: #ff4a6a;
+  font-weight: bold;
+  font-size: 0.8rem;
+  background: #1a0a12;
+  padding: 2px 12px;
+  border-radius: 30px;
+  border: 1px solid #ff4a6a40;
+}
+.iot-toggle {
+  background: #1a2a3a;
+  color: #8ab0c8;
+  border: none;
+  padding: 4px 16px;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  min-width: auto;
+}
+.iot-toggle:hover {
+  background: #2a3a4a;
+  color: #c0d8e8;
+}
+
+/* ----- component inventory ----- */
+.comp-input-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 0.8fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.add-btn {
+  background: #00aaff;
+  color: #04070b;
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  min-width: auto;
+}
+.add-btn:hover {
+  background: #00ccff;
+}
+
+.inventory-list {
+  background: #0a121c;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid #1a2a3a;
   max-height: 200px;
   overflow-y: auto;
 }
-.task-item, .comp-item {
+.comp-item {
   display: flex;
   justify-content: space-between;
   padding: 6px 12px;
-  background: #1a1a2e;
+  background: #0e1a26;
   border-radius: 8px;
   margin-bottom: 5px;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
-.task-item .del-btn, .comp-item .del-btn {
-  background: #ff2a75;
+.comp-item .del-btn {
+  background: #ff4a6a;
   color: white;
   border: none;
   border-radius: 20px;
-  padding: 2px 12px;
+  padding: 2px 14px;
   cursor: pointer;
   font-weight: bold;
   font-size: 0.7rem;
   font-family: Arial, sans-serif;
 }
 
-.iot-section button {
-  padding: 4px 14px;
-  font-size: 0.8rem;
-  min-width: auto;
-  font-family: Arial, sans-serif;
-}
-
-#timerDisplay {
-  font-size: 1.5rem;
-  font-weight: bold;
-  background: #0a0815;
-  padding: 4px 16px;
-  border-radius: 12px;
-  border: 1px solid #ffdd00;
-  min-width: 80px;
-  text-align: center;
-}
-
-/* ----- BACKUP / RESTORE button styling ----- */
-.backup-section button {
-  font-family: 'Inter', sans-serif;
+/* ----- backup buttons ----- */
+.backup-btn {
+  background: #1a2a3a;
+  color: #8ab0c8;
+  border: none;
   padding: 10px 25px;
-  font-size: 0.9rem;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.backup-btn:hover {
+  background: #2a3a4a;
+  color: #c0d8e8;
 }
 
-/* ----- FOOTER ----- */
+/* ----- footer ----- */
 footer {
   margin-top: 30px;
-  font-size: 0.8rem;
-  color: #445566;
+  font-size: 0.75rem;
+  color: #3a5a6a;
   text-align: center;
-  border-top: 1px solid #1a1a2e;
+  border-top: 1px solid #0a1a2a;
   padding-top: 15px;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 1px;
 }
 
-/* ----- RESPONSIVE: for phones and small screens ----- */
+/* ----- responsive for phones ----- */
 @media (max-width: 600px) {
-  .container {
-    padding: 20px;
-  }
-  .subject-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .dojo-header h1 {
-    font-size: 1.5rem;
-  }
-  .actions {
-    flex-direction: column;
-  }
-  button {
-    width: 100%;
-  }
-  .maintenance-section div,
-  .component-section div {
-    grid-template-columns: 1fr !important;
-  }
+  .system-panel { padding: 20px; }
+  .subject-row { grid-template-columns: 1fr; gap: 8px; }
+  .dojo-header h1 { font-size: 1.6rem; }
+  .actions { flex-direction: column; }
+  button { width: 100%; }
+  .comp-input-row { grid-template-columns: 1fr; }
+  .iot-grid { flex-direction: column; }
 }
