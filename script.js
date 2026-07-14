@@ -1,10 +1,15 @@
-// ----- DOM References -----
+// ============================================================
+//            ANIME STUDY DOJO – SCRIPT
+//    (I'm still learning, so please forgive any messy code!)
+// ============================================================
+
+// ----- 1.  DOM references – connect to HTML elements -----
 const nameInput = document.getElementById('name');
 const daysInput = document.getElementById('days');
 const resultsDiv = document.getElementById('results');
 const subjectGrid = document.getElementById('subjectGrid');
 
-// ----- Build the 7 Subject Slots -----
+// ----- 2.  Build the 7 subject slots dynamically -----
 function buildSubjectGrid() {
   subjectGrid.innerHTML = '';
   for (let i = 1; i <= 7; i++) {
@@ -25,30 +30,29 @@ function buildSubjectGrid() {
 }
 buildSubjectGrid();
 
-// ----- CURATED MOTIVATIONAL QUOTES (100+ accurate, study-relevant) -----
+// ----- 3.  MOTIVATIONAL QUOTES (curated list – 100+ powerful ones) -----
 const motivationQuotes = [
-  // ANIME QUOTES (authentic)
+  // ANIME QUOTES
   "Believe in the me that believes in you! – Kamina (Gurren Lagann)",
   "A dropout will beat a genius through hard work. – Rock Lee (Naruto)",
   "If you don't like your destiny, don't accept it. – Naruto Uzumaki",
-  "I never go back on my word, that's my ninja way! – Naruto Uzumaki",
+  "I never go back on my word, that's my ninja way! – Naruto",
   "Power comes in response to a need, not a desire. – Goku (Dragon Ball)",
   "It's not about the pain, it's about the lesson. – Erza Scarlet (Fairy Tail)",
-  "The moment you think of giving up, think of why you held on so long. – Eren Yeager (Attack on Titan)",
+  "The moment you think of giving up, think of why you held on so long. – Eren Yeager (AOT)",
   "I don't know what the future holds, but I know that I won't give up. – Luffy (One Piece)",
   "Hard work betters talent when talent doesn't work hard. – Various",
-  "Give up on giving up. – Rock Lee (Naruto)",
+  "Give up on giving up. – Rock Lee",
   "You are the protagonist of your own story. Act like it! – Various",
   "Rest if you must, but don't you ever quit. – Various",
   "Your future is created by what you do today, not tomorrow. – Various",
   "The only way to truly fail is to give up. – Various",
-  "Believe in your own potential. – All Might (My Hero Academia)",
-  "Plus Ultra! – All Might (My Hero Academia)",
-  "Do or do not, there is no try. – Various (inspired by Yoda)",
+  "Believe in your own potential. – All Might (MHA)",
+  "Plus Ultra! – All Might",
+  "Do or do not, there is no try. – Various",
   "Even the smallest person can change the course of the future. – Various",
   "It's not the strength of the body, but the strength of the spirit. – Various",
-
-  // ORIGINAL STUDY MOTIVATION
+  // STUDY & GENERAL WISDOM
   "Success is the sum of small efforts repeated day in and day out.",
   "Don't study until you get it right. Study until you can't get it wrong.",
   "The secret of getting ahead is getting started.",
@@ -77,12 +81,10 @@ const motivationQuotes = [
   "Study because knowledge is power. Study because understanding is freedom.",
   "The more you learn, the more you realize how much you don't know – and that's a good thing.",
   "There is no elevator to success. You have to take the stairs.",
-  "Success usually comes to those who are too busy to be looking for it.",
   "Champions are made in the hours that no one is watching.",
   "The only way to do great work is to love what you do.",
   "Your future depends on what you do today.",
   "The best way to predict the future is to create it.",
-  "Hard work beats talent when talent doesn't work hard.",
   "Never give up on something you can't go a day without thinking about.",
   "It's not about perfect. It's about effort.",
   "If you want to fly, you have to give up the things that weigh you down.",
@@ -153,21 +155,20 @@ const motivationQuotes = [
   "Learning is a treasure that will follow its owner everywhere.",
   "Education is not preparation for life; education is life itself.",
   "Your education is your ticket to the future. Don't leave it at the gate.",
-  "The more you read, the more things you will know. The more you learn, the more places you'll go.",
+  "The more you read, the more things you will know. The more you learn, the more places you'll go."
 ];
 
-// ----- Get 3 random quotes for motivation -----
+// ----- 4.  Helper: get 3 random quotes for motivation -----
 function getRandomMotivationQuotes() {
   const shuffled = [...motivationQuotes];
-  // Shuffle array using Fisher-Yates
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled.slice(0, 3); // pick first 3
+  return shuffled.slice(0, 3);
 }
 
-// ----- Priority Logic (same) -----
+// ----- 5.  Priority logic – determines study intensity based on grade and days left -----
 function getPriority(mark, days) {
   let baseTime = 20;
   if (mark < 40) baseTime = 60;
@@ -187,7 +188,7 @@ function getPriority(mark, days) {
   return { level, colorClass, time: baseTime };
 }
 
-// ----- Main Analysis -----
+// ----- 6.  MAIN ANALYSIS FUNCTION – the heart of the study planner -----
 function analyze() {
   const name = nameInput.value.trim() || 'Student';
   const days = Number(daysInput.value.trim());
@@ -196,6 +197,7 @@ function analyze() {
     return;
   }
 
+  // Collect subjects and grades from the 7 slots
   const subjects = {};
   let isValid = true;
   let errors = [];
@@ -227,6 +229,7 @@ function analyze() {
     subjects[subjectName] = grade;
   }
 
+  // If there are errors or no subjects, show error message
   if (!isValid || Object.keys(subjects).length === 0) {
     let output = `<h2>⚠️ INCOMPLETE REGISTER</h2>`;
     if (errors.length) output += `<ul style="color:#ff6b6b;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
@@ -235,6 +238,7 @@ function analyze() {
     return;
   }
 
+  // Build the study plan output
   let output = `<h2>👋 HELLO, ${name.toUpperCase()}!</h2>`;
   output += `<h3>📊 YOUR STUDY PLAN</h3>`;
 
@@ -252,9 +256,8 @@ function analyze() {
     }
   }
 
-  // Get 3 random quotes
+  // ----- MOTIVATION BOOST (3 random quotes) -----
   const quotes = getRandomMotivationQuotes();
-
   output += `<div class="motivation-block">`;
   output += `<h3>💥 MOTIVATION BOOST</h3>`;
   output += `<p>🔴 Your weakest link is <b>${weakest}</b> (${lowestMark}%). But that's where you grow the most!</p>`;
@@ -263,7 +266,7 @@ function analyze() {
   output += `<p>🌟 <i>"${quotes[2]}"</i></p>`;
   output += `</div>`;
 
-  // Exam urgency
+  // ----- Exam urgency -----
   output += `<h3>⏳ EXAM COUNTDOWN (${days} days)</h3>`;
   if (days <= 3) {
     output += `<p>⚠️ <span style="color:#ff2a75;">ULTRA URGENT:</span> Final stretch! Study for at least 4 hours daily.</p>`;
@@ -275,13 +278,13 @@ function analyze() {
     output += `<p>✅ You have enough time. Build a solid foundation.</p>`;
   }
 
-  // Study order
+  // ----- Recommended revision order (weakest to strongest) -----
   const sorted = Object.entries(subjects).sort((a, b) => a[1] - b[1]);
   const order = sorted.map(([subj]) => subj).join(' → ');
   output += `<p><b>Recommended revision order:</b> ${order}</p>`;
   output += `<p>📊 <b>Total daily study time:</b> ${totalMin} minutes (${Math.round(totalMin/60)} hours).</p>`;
 
-  // Save data
+  // ----- Save data to localStorage -----
   localStorage.setItem('studyAssistant_name', name);
   localStorage.setItem('studyAssistant_days', daysInput.value);
   for (let i = 1; i <= 7; i++) {
@@ -292,7 +295,7 @@ function analyze() {
   resultsDiv.innerHTML = output;
 }
 
-// ----- Load, Clear, Print (same as before) -----
+// ----- 7.  Load saved data from localStorage (on page load) -----
 function loadSavedData() {
   const savedName = localStorage.getItem('studyAssistant_name');
   if (savedName) nameInput.value = savedName;
@@ -306,6 +309,7 @@ function loadSavedData() {
   }
 }
 
+// ----- 8.  Clear all data (with confirmation) -----
 function clearAll() {
   if (!confirm('Reset the Dojo? All data will be lost!')) return;
   nameInput.value = '';
@@ -318,6 +322,7 @@ function clearAll() {
   localStorage.clear();
 }
 
+// ----- 9.  Print the study plan (opens a new window for printing) -----
 function printResults() {
   const content = resultsDiv.innerHTML;
   if (!content || content.includes('ERROR') || content.includes('INCOMPLETE')) {
@@ -344,11 +349,247 @@ function printResults() {
   win.print();
 }
 
-// ----- Event Listeners -----
+// ----- 10. Event listeners for buttons -----
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('clearBtn').addEventListener('click', clearAll);
 document.getElementById('printBtn').addEventListener('click', printResults);
+// Enter key triggers analysis
 document.querySelectorAll('input').forEach(inp => inp.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
 }));
+
+// ----- 11. Load saved data when page starts -----
 window.addEventListener('DOMContentLoaded', loadSavedData);
+
+// ============================================================
+// ======  EXTRA MODULES (FOCUS AREAS)  =======================
+// ============================================================
+
+// ---------- A. REPAIR & MAINTENANCE LOG ----------
+function loadTasks() {
+  const tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
+  const list = document.getElementById('taskList');
+  if (tasks.length === 0) {
+    list.innerHTML = '<p style="color:#445566;">No tasks yet. Add a maintenance task.</p>';
+    return;
+  }
+  list.innerHTML = tasks.map((task, idx) => `
+    <div class="task-item">
+      <span><b>${task.name}</b> — ${task.status}</span>
+      <button class="del-btn" data-idx="${idx}">✕</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('#taskList .del-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      let tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
+      tasks.splice(this.dataset.idx, 1);
+      localStorage.setItem('maintenanceTasks', JSON.stringify(tasks));
+      loadTasks();
+    });
+  });
+}
+
+document.getElementById('addTaskBtn').addEventListener('click', function() {
+  const name = document.getElementById('taskInput').value.trim();
+  const status = document.getElementById('taskStatus').value.trim() || 'Pending';
+  if (!name) return alert('Enter a task name.');
+  const tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
+  tasks.push({ name, status });
+  localStorage.setItem('maintenanceTasks', JSON.stringify(tasks));
+  document.getElementById('taskInput').value = '';
+  document.getElementById('taskStatus').value = '';
+  loadTasks();
+});
+
+// ---------- B. COMPONENT INVENTORY (Industrial Electronics) ----------
+function loadComponents() {
+  const comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
+  const list = document.getElementById('componentList');
+  if (comps.length === 0) {
+    list.innerHTML = '<p style="color:#445566;">No components added yet.</p>';
+    return;
+  }
+  list.innerHTML = comps.map((comp, idx) => `
+    <div class="comp-item">
+      <span><b>${comp.name}</b> (${comp.spec}) — Qty: ${comp.qty}</span>
+      <button class="del-btn" data-idx="${idx}">✕</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('#componentList .del-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      let comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
+      comps.splice(this.dataset.idx, 1);
+      localStorage.setItem('componentInventory', JSON.stringify(comps));
+      loadComponents();
+    });
+  });
+}
+
+document.getElementById('addCompBtn').addEventListener('click', function() {
+  const name = document.getElementById('compName').value.trim();
+  const spec = document.getElementById('compSpec').value.trim() || 'N/A';
+  const qty = parseInt(document.getElementById('compQty').value) || 0;
+  if (!name) return alert('Enter a component name.');
+  const comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
+  comps.push({ name, spec, qty });
+  localStorage.setItem('componentInventory', JSON.stringify(comps));
+  document.getElementById('compName').value = '';
+  document.getElementById('compSpec').value = '';
+  document.getElementById('compQty').value = '';
+  loadComponents();
+});
+
+// ---------- C. IoT DEVICE STATUS (Communication Tech) ----------
+let iotDevices = {
+  lamp: true,
+  watch: true,
+  headphone: true
+};
+
+function updateIoTUI() {
+  document.getElementById('lampStatus').textContent = iotDevices.lamp ? 'ONLINE' : 'OFFLINE';
+  document.getElementById('lampStatus').style.color = iotDevices.lamp ? '#ffdd00' : '#ff2a75';
+  document.getElementById('watchStatus').textContent = iotDevices.watch ? 'ONLINE' : 'OFFLINE';
+  document.getElementById('watchStatus').style.color = iotDevices.watch ? '#00f0ff' : '#ff2a75';
+  document.getElementById('headphoneStatus').textContent = iotDevices.headphone ? 'ONLINE' : 'OFFLINE';
+  document.getElementById('headphoneStatus').style.color = iotDevices.headphone ? '#00f0ff' : '#ff2a75';
+}
+
+document.getElementById('toggleLamp').addEventListener('click', () => { iotDevices.lamp = !iotDevices.lamp; updateIoTUI(); });
+document.getElementById('toggleWatch').addEventListener('click', () => { iotDevices.watch = !iotDevices.watch; updateIoTUI(); });
+document.getElementById('toggleHeadphone').addEventListener('click', () => { iotDevices.headphone = !iotDevices.headphone; updateIoTUI(); });
+
+// ---------- D. WEARABLE FOCUS REMINDER (Smartwatch simulation) ----------
+let focusTimer = null;
+let focusSeconds = 0;
+
+function updateTimerDisplay() {
+  const mins = Math.floor(focusSeconds / 60);
+  const secs = focusSeconds % 60;
+  document.getElementById('timerDisplay').textContent = 
+    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+}
+
+function showNotification(title, message) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body: message, icon: '📚' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') new Notification(title, { body: message, icon: '📚' });
+    });
+  }
+  document.getElementById('notificationStatus').textContent = '🔔 Notifications: ' + Notification.permission;
+}
+
+// Request notification permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+document.getElementById('notificationStatus').textContent = '🔔 Notifications: ' + (Notification.permission || 'not requested');
+
+document.getElementById('startFocusBtn').addEventListener('click', function() {
+  const mins = parseInt(document.getElementById('focusMinutes').value) || 25;
+  if (focusTimer) return alert('A timer is already running. Stop it first.');
+  focusSeconds = mins * 60;
+  updateTimerDisplay();
+  focusTimer = setInterval(() => {
+    focusSeconds--;
+    updateTimerDisplay();
+    if (focusSeconds <= 0) {
+      clearInterval(focusTimer);
+      focusTimer = null;
+      showNotification('⌚ WEARABLE ALERT!', 'Study session complete! Time for a break, shinobi! 🍵');
+      document.getElementById('timerDisplay').textContent = '00:00';
+    }
+  }, 1000);
+  showNotification('⌚ Focus mode engaged', `Study for ${mins} minutes. You got this! 🔥`);
+});
+
+document.getElementById('stopFocusBtn').addEventListener('click', function() {
+  if (focusTimer) {
+    clearInterval(focusTimer);
+    focusTimer = null;
+    focusSeconds = 0;
+    updateTimerDisplay();
+    document.getElementById('timerDisplay').textContent = '00:00';
+    showNotification('⌚ Focus stopped', 'Timer was cancelled. Rest when you need to.');
+  } else {
+    alert('No timer running.');
+  }
+});
+
+// ---------- E. BACKUP & RESTORE (for cross‑device use) ----------
+function exportData() {
+  const data = {
+    studyAssistant_name: localStorage.getItem('studyAssistant_name'),
+    studyAssistant_days: localStorage.getItem('studyAssistant_days'),
+    maintenanceTasks: JSON.parse(localStorage.getItem('maintenanceTasks') || '[]'),
+    componentInventory: JSON.parse(localStorage.getItem('componentInventory') || '[]'),
+    // Also export all subject/grade data
+    subjects: {},
+    grades: {}
+  };
+  for (let i = 1; i <= 7; i++) {
+    data.subjects[`subject-${i}`] = localStorage.getItem(`studyAssistant_subj_${i}`) || '';
+    data.grades[`grade-${i}`] = localStorage.getItem(`studyAssistant_grade_${i}`) || '';
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'anime_dojo_backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      // Restore each piece
+      if (data.studyAssistant_name) localStorage.setItem('studyAssistant_name', data.studyAssistant_name);
+      if (data.studyAssistant_days) localStorage.setItem('studyAssistant_days', data.studyAssistant_days);
+      if (data.maintenanceTasks) localStorage.setItem('maintenanceTasks', JSON.stringify(data.maintenanceTasks));
+      if (data.componentInventory) localStorage.setItem('componentInventory', JSON.stringify(data.componentInventory));
+      if (data.subjects) {
+        for (let i = 1; i <= 7; i++) {
+          const key = `studyAssistant_subj_${i}`;
+          if (data.subjects[`subject-${i}`] !== undefined) localStorage.setItem(key, data.subjects[`subject-${i}`]);
+        }
+      }
+      if (data.grades) {
+        for (let i = 1; i <= 7; i++) {
+          const key = `studyAssistant_grade_${i}`;
+          if (data.grades[`grade-${i}`] !== undefined) localStorage.setItem(key, data.grades[`grade-${i}`]);
+        }
+      }
+      alert('Data imported successfully! Please refresh the page to see all your data.');
+      // Reload all UI
+      loadSavedData();
+      loadTasks();
+      loadComponents();
+      updateIoTUI();
+    } catch (err) {
+      alert('Failed to import data. Please check the file format.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', function(e) {
+  if (this.files.length) {
+    importData(this.files[0]);
+    this.value = ''; // reset so same file can be chosen again
+  }
+});
+
+// ---------- Load extra data on start ----------
+document.addEventListener('DOMContentLoaded', function() {
+  loadTasks();
+  loadComponents();
+  updateIoTUI();
+});
