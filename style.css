@@ -1,15 +1,21 @@
-/* My first CSS file – I'm still learning! */
+/* ============================================================
+   MY FIRST CSS FILE – I'm still learning!
+   This styles the Anime Study Dojo.
+   ============================================================ */
 
+/* ----- RESET default margins and paddings ----- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ----- BODY – dark background with a neon glow ----- */
 body {
-  background-color: #0b0a16;
+  background: #0b0a16;
+  background-image: radial-gradient(circle at 20% 30%, #1a1433 0%, #0a0815 90%);
+  font-family: 'Inter', Arial, sans-serif;
   color: #e2e8f0;
-  font-family: Arial, Helvetica, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,6 +23,7 @@ body {
   padding: 20px;
 }
 
+/* ----- MAIN CONTAINER – the card that holds everything ----- */
 .container {
   background: #12101e;
   max-width: 950px;
@@ -24,17 +31,18 @@ body {
   border-radius: 30px;
   padding: 30px 25px;
   border: 1px solid #2a2a44;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.08);
 }
 
+/* ----- HEADER styles ----- */
 .dojo-header h1 {
-  font-size: 2.2rem;
-  font-weight: bold;
-  text-transform: uppercase;
   font-family: 'Orbitron', monospace;
+  font-size: 2.2rem;
+  font-weight: 900;
+  text-transform: uppercase;
   letter-spacing: 2px;
   color: #ffdd00;
-  text-shadow: 0 0 8px #ff2a75;
+  text-shadow: 0 0 10px #ff2a75;
 }
 .dojo-header h1 span {
   color: #00f0ff;
@@ -46,6 +54,7 @@ body {
   margin: 10px 0 20px 0;
 }
 
+/* ----- SECTION HEADINGS ----- */
 h2 {
   font-family: 'Orbitron', monospace;
   font-size: 1.1rem;
@@ -56,17 +65,18 @@ h2 {
   margin-bottom: 15px;
   text-transform: uppercase;
 }
-
 .subtext {
   color: #8899aa;
   font-size: 0.9rem;
   margin-bottom: 15px;
 }
 
+/* ----- SPACING between sections ----- */
 section {
   margin-bottom: 25px;
 }
 
+/* ----- LABELS for inputs ----- */
 label {
   display: block;
   font-weight: bold;
@@ -76,6 +86,7 @@ label {
   text-transform: uppercase;
 }
 
+/* ----- TEXT INPUTS & NUMBER INPUTS ----- */
 input {
   padding: 10px 12px;
   border: 2px solid #2a2a44;
@@ -90,6 +101,7 @@ input:focus {
   outline: none;
 }
 
+/* ----- SUBJECT GRID (7 rows) ----- */
 .subject-grid {
   display: flex;
   flex-direction: column;
@@ -101,17 +113,19 @@ input:focus {
   gap: 15px;
   align-items: center;
 }
+
+/* ----- EXAM DAYS INPUT – limit width ----- */
 .exam-section input {
   max-width: 200px;
 }
 
+/* ----- BUTTONS (main actions) ----- */
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
   margin: 20px 0 15px 0;
 }
-
 button {
   padding: 12px 20px;
   border: none;
@@ -124,12 +138,14 @@ button {
   text-transform: uppercase;
   font-family: 'Orbitron', monospace;
   letter-spacing: 1px;
+  transition: 0.15s;
 }
 
+/* ----- specific button colours ----- */
 #analyzeBtn {
   background: #ff2a75;
   color: white;
-  box-shadow: 0 0 10px #ff2a75;
+  box-shadow: 0 0 15px #ff2a75;
 }
 #analyzeBtn:hover {
   background: #ff0055;
@@ -152,6 +168,7 @@ button {
   background: #ffea55;
 }
 
+/* ----- RESULTS CARD (where the analysis appears) ----- */
 .results-card {
   margin-top: 20px;
   padding: 20px;
@@ -175,6 +192,8 @@ button {
 .results-card p {
   margin: 8px 0;
 }
+
+/* ----- PRIORITY BADGES (coloured) ----- */
 .results-card .priority-high {
   color: #ff2a75;
   font-weight: bold;
@@ -202,6 +221,8 @@ button {
   border-left: 3px solid #00f0ff;
   display: inline-block;
 }
+
+/* ----- MOTIVATION BLOCK (quotes) ----- */
 .results-card .motivation-block {
   background: #1a0f1f;
   padding: 15px;
@@ -212,6 +233,65 @@ button {
   color: #ddeeff;
 }
 
+/* ----- EXTRA MODULES (maintenance, components, IoT, wearable) ----- */
+hr {
+  border: 1px solid #1a1a2e;
+  margin: 25px 0;
+}
+
+#taskList, #componentList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.task-item, .comp-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.task-item .del-btn, .comp-item .del-btn {
+  background: #ff2a75;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 2px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.7rem;
+  font-family: Arial, sans-serif;
+}
+
+.iot-section button {
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  min-width: auto;
+  font-family: Arial, sans-serif;
+}
+
+#timerDisplay {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: #0a0815;
+  padding: 4px 16px;
+  border-radius: 12px;
+  border: 1px solid #ffdd00;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* ----- BACKUP / RESTORE button styling ----- */
+.backup-section button {
+  font-family: 'Inter', sans-serif;
+  padding: 10px 25px;
+  font-size: 0.9rem;
+}
+
+/* ----- FOOTER ----- */
 footer {
   margin-top: 30px;
   font-size: 0.8rem;
@@ -221,7 +301,7 @@ footer {
   padding-top: 15px;
 }
 
-/* For phones */
+/* ----- RESPONSIVE: for phones and small screens ----- */
 @media (max-width: 600px) {
   .container {
     padding: 20px;
@@ -238,5 +318,9 @@ footer {
   }
   button {
     width: 100%;
+  }
+  .maintenance-section div,
+  .component-section div {
+    grid-template-columns: 1fr !important;
   }
 }
