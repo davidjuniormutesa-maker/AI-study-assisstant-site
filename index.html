@@ -3,114 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⛓️ STUDY DOJO · SYSTEM ACTIVATED</title>
+  <title>⚡ STUDY DOJO · SYSTEM ⚡</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-  <!-- ===== MAIN SYSTEM PANEL ===== -->
-  <div class="system-panel">
-
+  <div class="container" id="systemContainer">
     <!-- ===== HEADER ===== -->
     <header class="dojo-header">
-      <h1>⛓️ <span>STUDY</span> DOJO</h1>
-      <p class="subtitle">⚡ SYSTEM ACTIVATED ⚡</p>
-      <div class="status-line">
-        <span id="statusGlitch">▶ CONNECTION STABLE</span>
-      </div>
+      <h1>⚡ <span>STUDY</span> DOJO</h1>
+      <p>🔥 System initialized. Train your brain. Dominate your exams. 🔥</p>
     </header>
 
-    <!-- ===== USER NAME ===== -->
+    <!-- ===== USER IDENTITY ===== -->
     <section class="user-section">
       <label for="name">👤 USER REGISTRY</label>
-      <input type="text" id="name" placeholder="Enter your name, hunter..." autofocus>
+      <input type="text" id="name" placeholder="Enter your name, Hunter." autofocus>
     </section>
 
-    <!-- ===== SUBJECT & GRADE REGISTER ===== -->
+    <!-- ===== SUBJECT & GRADE REGISTER (8 SLOTS) ===== -->
     <section class="marks-section">
       <h2>📜 SUBJECT & GRADE REGISTER</h2>
-      <p class="subtext">Enter subjects and power levels (0–100). Leave unused slots empty.</p>
-      <div class="subject-grid" id="subjectGrid"></div>
+      <p class="subtext">Enter at least 3 subjects and their power levels (0–100).</p>
+      <div class="subject-grid" id="subjectGrid">
+        <!-- 8 rows will be populated by JavaScript -->
+      </div>
     </section>
 
-    <!-- ===== DAYS UNTIL EXAM ===== -->
+    <!-- ===== EXAM COUNTDOWN ===== -->
     <section class="exam-section">
-      <h2>⏳ DAYS UNTIL FINAL BOSS</h2>
-      <input type="number" id="days" min="0" max="365" placeholder="e.g., 14">
+      <h2>⏳ DAYS UNTIL FINAL BOSS (EXAM)</h2>
+      <input type="number" id="days" min="0" max="365" placeholder="e.g., 30">
     </section>
 
     <!-- ===== ACTION BUTTONS ===== -->
     <div class="actions">
       <button id="analyzeBtn">🔥 RUN ANALYSIS</button>
-      <button id="clearBtn" class="clear">🗑️ RESET</button>
+      <button id="clearBtn" class="clear">🗑️ RESET SYSTEM</button>
       <button id="printBtn" class="print">📜 PRINT SCROLL</button>
     </div>
 
-    <!-- ===== RESULTS / MOTIVATION ===== -->
+    <!-- ===== RESULTS / MOTIVATION AREA ===== -->
     <div id="results" class="results-card">
-      <p style="color: #6a7a8a;">💪 Enter your stats and hit <strong>Run Analysis</strong> to get your training plan.</p>
+      <p style="color: #8899aa;">💪 Enter your stats and hit <strong>Run Analysis</strong> to get your personalized training plan.</p>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- ===== FOCUS AREAS (only TWO) ===== -->
-    <!-- ========================================================= -->
-
-    <hr style="border-color:#1a2a3a; margin: 30px 0;">
-
-    <!-- ===== 1. COMMUNICATION TECHNOLOGY – IoT Dashboard ===== -->
-    <h2>📡 COMMUNICATION TECH · IoT STATUS</h2>
-    <section class="iot-section">
-      <div class="iot-grid">
-        <div class="iot-item">
-          <b>💡 Smart Lamp</b>
-          <span id="lampStatus" class="status-online">ONLINE</span>
-          <button id="toggleLamp" class="iot-toggle">Toggle</button>
-        </div>
-        <div class="iot-item">
-          <b>⌚ Smart Watch</b>
-          <span id="watchStatus" class="status-online">ONLINE</span>
-          <button id="toggleWatch" class="iot-toggle">Toggle</button>
-        </div>
-        <div class="iot-item">
-          <b>🎧 Noise Cancelling</b>
-          <span id="headphoneStatus" class="status-online">ONLINE</span>
-          <button id="toggleHeadphone" class="iot-toggle">Toggle</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== 2. INDUSTRIAL & PROFESSIONAL – Component Inventory ===== -->
-    <h2>⚙️ INDUSTRIAL · COMPONENT INVENTORY</h2>
-    <section class="component-section">
-      <div class="comp-input-row">
-        <input type="text" id="compName" placeholder="Component (e.g., Arduino Uno)">
-        <input type="text" id="compSpec" placeholder="Spec (e.g., 16MHz)">
-        <input type="number" id="compQty" placeholder="Qty" min="0">
-        <button id="addCompBtn" class="add-btn">➕ Add</button>
-      </div>
-      <div id="componentList" class="inventory-list">
-        <p style="color:#445566;">No components added yet.</p>
-      </div>
-    </section>
-
-    <!-- ===== BACKUP / RESTORE (cross‑device) ===== -->
-    <hr style="border-color:#1a2a3a; margin: 30px 0;">
-    <h2>💾 BACKUP & RESTORE</h2>
-    <section class="backup-section">
-      <p style="color:#8899aa;">Export your data – then import it on another device to carry your progress.</p>
-      <div style="display:flex; gap:15px; flex-wrap:wrap;">
-        <button id="exportBtn" class="backup-btn">📥 Export</button>
-        <button id="importBtn" class="backup-btn">📤 Import</button>
-        <input type="file" id="importFile" accept=".json" style="display:none;">
-      </div>
-    </section>
-
-    <!-- ===== FOOTER ===== -->
     <footer>
-      <p>⛓️ "Arise." – Sung Jin‑Woo ⛓️</p>
-      <p>© 2026 STUDY DOJO. All rights reserved by David Mutesa.</p>
-      <p>Contact @ davidmutesjunoir@gmail.com</p>
+      <p>✨ "Arise." – System ✨</p>
     </footer>
   </div>
 
