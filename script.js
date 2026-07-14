@@ -1,15 +1,15 @@
-// ============================================================
-//            ANIME STUDY DOJO – SCRIPT
-//    (I'm still learning, so please forgive any messy code!)
-// ============================================================
+// ================================================================
+// STUDY DOJO – SYSTEM SCRIPT (UPDATED PRIORITY LOGIC)
+// Full comments for every section – beginner friendly.
+// ================================================================
 
-// ----- 1.  DOM references – connect to HTML elements -----
+// ----- 1. DOM REFERENCES – connect to HTML elements -----
 const nameInput = document.getElementById('name');
 const daysInput = document.getElementById('days');
 const resultsDiv = document.getElementById('results');
 const subjectGrid = document.getElementById('subjectGrid');
 
-// ----- 2.  Build the 7 subject slots dynamically -----
+// ----- 2. BUILD THE 7 SUBJECT SLOTS dynamically -----
 function buildSubjectGrid() {
   subjectGrid.innerHTML = '';
   for (let i = 1; i <= 7; i++) {
@@ -30,9 +30,9 @@ function buildSubjectGrid() {
 }
 buildSubjectGrid();
 
-// ----- 3.  MOTIVATIONAL QUOTES (curated list – 100+ powerful ones) -----
+// ----- 3. MOTIVATIONAL QUOTES (120+ curated – anime + study wisdom) -----
 const motivationQuotes = [
-  // ANIME QUOTES
+  // --- ANIME QUOTES ---
   "Believe in the me that believes in you! – Kamina (Gurren Lagann)",
   "A dropout will beat a genius through hard work. – Rock Lee (Naruto)",
   "If you don't like your destiny, don't accept it. – Naruto Uzumaki",
@@ -52,7 +52,7 @@ const motivationQuotes = [
   "Do or do not, there is no try. – Various",
   "Even the smallest person can change the course of the future. – Various",
   "It's not the strength of the body, but the strength of the spirit. – Various",
-  // STUDY & GENERAL WISDOM
+  // --- STUDY / GENERAL WISDOM ---
   "Success is the sum of small efforts repeated day in and day out.",
   "Don't study until you get it right. Study until you can't get it wrong.",
   "The secret of getting ahead is getting started.",
@@ -155,10 +155,17 @@ const motivationQuotes = [
   "Learning is a treasure that will follow its owner everywhere.",
   "Education is not preparation for life; education is life itself.",
   "Your education is your ticket to the future. Don't leave it at the gate.",
-  "The more you read, the more things you will know. The more you learn, the more places you'll go."
+  "The more you read, the more things you will know. The more you learn, the more places you'll go.",
+  // --- EXTRA (Solo Leveling / System vibe) ---
+  "Arise, and become stronger. – Sung Jin‑Woo",
+  "The system rewards those who never stop leveling up.",
+  "Every failure is just a quest you haven't completed yet.",
+  "Your potential is your greatest weapon – sharpen it daily.",
+  "A true hunter never fears the grind.",
+  "The dungeon of exams is your final boss. Prepare accordingly."
 ];
 
-// ----- 4.  Helper: get 3 random quotes for motivation -----
+// ----- 4. GET 3 RANDOM QUOTES for the motivation block -----
 function getRandomMotivationQuotes() {
   const shuffled = [...motivationQuotes];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -168,27 +175,36 @@ function getRandomMotivationQuotes() {
   return shuffled.slice(0, 3);
 }
 
-// ----- 5.  Priority logic – determines study intensity based on grade and days left -----
+// ----- 5. PRIORITY LOGIC – UPDATED (more realistic, with cap) -----
 function getPriority(mark, days) {
-  let baseTime = 20;
-  if (mark < 40) baseTime = 60;
-  else if (mark < 60) baseTime = 45;
-  else if (mark < 75) baseTime = 30;
-  else baseTime = 20;
+  // Base minutes – more realistic ranges
+  let baseTime = 15; // default for high scorers
+  if (mark < 35) baseTime = 50;
+  else if (mark < 55) baseTime = 40;
+  else if (mark < 70) baseTime = 25;
+  else baseTime = 12;
 
-  if (days <= 3) baseTime = Math.round(baseTime * 1.5);
-  else if (days <= 7) baseTime = Math.round(baseTime * 1.2);
+  // Urgency factor – smaller multiplier so it doesn't explode
+  let urgency = 1;
+  if (days <= 3) urgency = 1.4;   // +40% if exam is very soon
+  else if (days <= 7) urgency = 1.2; // +20% if within a week
+  else urgency = 1; // normal pace
+
+  let finalTime = Math.round(baseTime * urgency);
+
+  // Cap individual subject time at 90 minutes (no one should study 1 subject for 2+ hours daily)
+  if (finalTime > 90) finalTime = 90;
 
   let level, colorClass;
-  if (mark < 40) { level = 'HIGH PRIORITY'; colorClass = 'priority-high'; }
-  else if (mark < 60) { level = 'MEDIUM PRIORITY'; colorClass = 'priority-medium'; }
-  else if (mark < 75) { level = 'LOW PRIORITY'; colorClass = 'priority-low'; }
+  if (mark < 35) { level = 'HIGH PRIORITY'; colorClass = 'priority-high'; }
+  else if (mark < 55) { level = 'MEDIUM PRIORITY'; colorClass = 'priority-medium'; }
+  else if (mark < 70) { level = 'LOW PRIORITY'; colorClass = 'priority-low'; }
   else { level = 'VERY LOW'; colorClass = 'priority-low'; }
 
-  return { level, colorClass, time: baseTime };
+  return { level, colorClass, time: finalTime };
 }
 
-// ----- 6.  MAIN ANALYSIS FUNCTION – the heart of the study planner -----
+// ----- 6. MAIN ANALYSIS FUNCTION – generates the study plan -----
 function analyze() {
   const name = nameInput.value.trim() || 'Student';
   const days = Number(daysInput.value.trim());
@@ -197,7 +213,7 @@ function analyze() {
     return;
   }
 
-  // Collect subjects and grades from the 7 slots
+  // Collect subjects & grades from the 7 slots
   const subjects = {};
   let isValid = true;
   let errors = [];
@@ -229,7 +245,6 @@ function analyze() {
     subjects[subjectName] = grade;
   }
 
-  // If there are errors or no subjects, show error message
   if (!isValid || Object.keys(subjects).length === 0) {
     let output = `<h2>⚠️ INCOMPLETE REGISTER</h2>`;
     if (errors.length) output += `<ul style="color:#ff6b6b;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
@@ -238,7 +253,7 @@ function analyze() {
     return;
   }
 
-  // Build the study plan output
+  // Build the study plan
   let output = `<h2>👋 HELLO, ${name.toUpperCase()}!</h2>`;
   output += `<h3>📊 YOUR STUDY PLAN</h3>`;
 
@@ -269,7 +284,7 @@ function analyze() {
   // ----- Exam urgency -----
   output += `<h3>⏳ EXAM COUNTDOWN (${days} days)</h3>`;
   if (days <= 3) {
-    output += `<p>⚠️ <span style="color:#ff2a75;">ULTRA URGENT:</span> Final stretch! Study for at least 4 hours daily.</p>`;
+    output += `<p>⚠️ <span style="color:#ff4a6a;">ULTRA URGENT:</span> Final stretch! Study for at least 4 hours daily.</p>`;
   } else if (days <= 7) {
     output += `<p>📅 One week left. Create a strict daily schedule.</p>`;
   } else if (days <= 14) {
@@ -282,7 +297,15 @@ function analyze() {
   const sorted = Object.entries(subjects).sort((a, b) => a[1] - b[1]);
   const order = sorted.map(([subj]) => subj).join(' → ');
   output += `<p><b>Recommended revision order:</b> ${order}</p>`;
-  output += `<p>📊 <b>Total daily study time:</b> ${totalMin} minutes (${Math.round(totalMin/60)} hours).</p>`;
+
+  // ----- Total daily study time – WITH CAP (new) -----
+  let finalTotal = totalMin;
+  let capMessage = '';
+  if (totalMin > 300) {
+    finalTotal = 300;
+    capMessage = ` (⚠️ Capped at 300 min / 5 hours. Focus on your weakest 4 subjects first, then rotate.)`;
+  }
+  output += `<p>📊 <b>Total daily study time:</b> ${finalTotal} minutes (${Math.round(finalTotal/60)} hours)${capMessage}.</p>`;
 
   // ----- Save data to localStorage -----
   localStorage.setItem('studyAssistant_name', name);
@@ -295,7 +318,7 @@ function analyze() {
   resultsDiv.innerHTML = output;
 }
 
-// ----- 7.  Load saved data from localStorage (on page load) -----
+// ----- 7. LOAD SAVED DATA from localStorage on page load -----
 function loadSavedData() {
   const savedName = localStorage.getItem('studyAssistant_name');
   if (savedName) nameInput.value = savedName;
@@ -309,20 +332,20 @@ function loadSavedData() {
   }
 }
 
-// ----- 8.  Clear all data (with confirmation) -----
+// ----- 8. CLEAR ALL DATA (with confirmation) -----
 function clearAll() {
-  if (!confirm('Reset the Dojo? All data will be lost!')) return;
+  if (!confirm('Reset the System? All data will be lost!')) return;
   nameInput.value = '';
   daysInput.value = '';
   for (let i = 1; i <= 7; i++) {
     document.getElementById(`subject-${i}`).value = '';
     document.getElementById(`grade-${i}`).value = '';
   }
-  resultsDiv.innerHTML = '<p style="color:#445566;">🧹 Dojo reset. Ready for a new journey.</p>';
+  resultsDiv.innerHTML = '<p style="color:#445566;">🧹 System reset. Ready for a new journey.</p>';
   localStorage.clear();
 }
 
-// ----- 9.  Print the study plan (opens a new window for printing) -----
+// ----- 9. PRINT STUDY PLAN (opens a new window) -----
 function printResults() {
   const content = resultsDiv.innerHTML;
   if (!content || content.includes('ERROR') || content.includes('INCOMPLETE')) {
@@ -333,75 +356,66 @@ function printResults() {
   win.document.write(`
     <html><head><title>My Study Scroll</title>
     <style>
-      body { font-family: 'Segoe UI', sans-serif; padding: 2rem; background: #0b0a16; color: #e2e8f0; }
-      .priority-high { color: #ff2a75; font-weight:700; }
-      .priority-medium { color: #ffdd00; font-weight:700; }
-      .priority-low { color: #00f0ff; font-weight:700; }
-      .motivation-block { background: #1a1a2e; padding:1rem; border-radius:16px; border-left:4px solid #ff2a75; }
+      body { font-family: 'Segoe UI', sans-serif; padding: 2rem; background: #0b0a16; color: #d0dce8; }
+      .priority-high { color: #ff4a6a; font-weight:700; }
+      .priority-medium { color: #ffd04a; font-weight:700; }
+      .priority-low { color: #00d4ff; font-weight:700; }
+      .motivation-block { background: #1a1a2e; padding:1rem; border-radius:16px; border-left:4px solid #00c8ff; }
     </style>
     </head><body>
     <h1>📜 My Personal Study Scroll</h1>
     ${content}
-    <p><em>Generated by Anime Study Dojo</em></p>
+    <p><em>Generated by STUDY DOJO · SYSTEM ACTIVATED</em></p>
     </body></html>
   `);
   win.document.close();
   win.print();
 }
 
-// ----- 10. Event listeners for buttons -----
+// ----- 10. EVENT LISTENERS for buttons -----
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('clearBtn').addEventListener('click', clearAll);
 document.getElementById('printBtn').addEventListener('click', printResults);
+
 // Enter key triggers analysis
 document.querySelectorAll('input').forEach(inp => inp.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
 }));
 
-// ----- 11. Load saved data when page starts -----
+// ----- 11. LOAD DATA when page starts -----
 window.addEventListener('DOMContentLoaded', loadSavedData);
 
-// ============================================================
-// ======  EXTRA MODULES (FOCUS AREAS)  =======================
-// ============================================================
+// ================================================================
+// ====== FOCUS AREAS (only TWO) ===================================
+// ================================================================
 
-// ---------- A. REPAIR & MAINTENANCE LOG ----------
-function loadTasks() {
-  const tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
-  const list = document.getElementById('taskList');
-  if (tasks.length === 0) {
-    list.innerHTML = '<p style="color:#445566;">No tasks yet. Add a maintenance task.</p>';
-    return;
-  }
-  list.innerHTML = tasks.map((task, idx) => `
-    <div class="task-item">
-      <span><b>${task.name}</b> — ${task.status}</span>
-      <button class="del-btn" data-idx="${idx}">✕</button>
-    </div>
-  `).join('');
-  document.querySelectorAll('#taskList .del-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      let tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
-      tasks.splice(this.dataset.idx, 1);
-      localStorage.setItem('maintenanceTasks', JSON.stringify(tasks));
-      loadTasks();
-    });
-  });
+// ---------- A. COMMUNICATION TECHNOLOGY – IoT Dashboard ----------
+let iotDevices = {
+  lamp: true,
+  watch: true,
+  headphone: true
+};
+
+function updateIoTUI() {
+  const lampEl = document.getElementById('lampStatus');
+  const watchEl = document.getElementById('watchStatus');
+  const headEl = document.getElementById('headphoneStatus');
+  
+  lampEl.textContent = iotDevices.lamp ? 'ONLINE' : 'OFFLINE';
+  lampEl.className = iotDevices.lamp ? 'status-online' : 'status-offline';
+  
+  watchEl.textContent = iotDevices.watch ? 'ONLINE' : 'OFFLINE';
+  watchEl.className = iotDevices.watch ? 'status-online' : 'status-offline';
+  
+  headEl.textContent = iotDevices.headphone ? 'ONLINE' : 'OFFLINE';
+  headEl.className = iotDevices.headphone ? 'status-online' : 'status-offline';
 }
 
-document.getElementById('addTaskBtn').addEventListener('click', function() {
-  const name = document.getElementById('taskInput').value.trim();
-  const status = document.getElementById('taskStatus').value.trim() || 'Pending';
-  if (!name) return alert('Enter a task name.');
-  const tasks = JSON.parse(localStorage.getItem('maintenanceTasks') || '[]');
-  tasks.push({ name, status });
-  localStorage.setItem('maintenanceTasks', JSON.stringify(tasks));
-  document.getElementById('taskInput').value = '';
-  document.getElementById('taskStatus').value = '';
-  loadTasks();
-});
+document.getElementById('toggleLamp').addEventListener('click', () => { iotDevices.lamp = !iotDevices.lamp; updateIoTUI(); });
+document.getElementById('toggleWatch').addEventListener('click', () => { iotDevices.watch = !iotDevices.watch; updateIoTUI(); });
+document.getElementById('toggleHeadphone').addEventListener('click', () => { iotDevices.headphone = !iotDevices.headphone; updateIoTUI(); });
 
-// ---------- B. COMPONENT INVENTORY (Industrial Electronics) ----------
+// ---------- B. INDUSTRIAL & PROFESSIONAL – Component Inventory ----------
 function loadComponents() {
   const comps = JSON.parse(localStorage.getItem('componentInventory') || '[]');
   const list = document.getElementById('componentList');
@@ -439,94 +453,12 @@ document.getElementById('addCompBtn').addEventListener('click', function() {
   loadComponents();
 });
 
-// ---------- C. IoT DEVICE STATUS (Communication Tech) ----------
-let iotDevices = {
-  lamp: true,
-  watch: true,
-  headphone: true
-};
-
-function updateIoTUI() {
-  document.getElementById('lampStatus').textContent = iotDevices.lamp ? 'ONLINE' : 'OFFLINE';
-  document.getElementById('lampStatus').style.color = iotDevices.lamp ? '#ffdd00' : '#ff2a75';
-  document.getElementById('watchStatus').textContent = iotDevices.watch ? 'ONLINE' : 'OFFLINE';
-  document.getElementById('watchStatus').style.color = iotDevices.watch ? '#00f0ff' : '#ff2a75';
-  document.getElementById('headphoneStatus').textContent = iotDevices.headphone ? 'ONLINE' : 'OFFLINE';
-  document.getElementById('headphoneStatus').style.color = iotDevices.headphone ? '#00f0ff' : '#ff2a75';
-}
-
-document.getElementById('toggleLamp').addEventListener('click', () => { iotDevices.lamp = !iotDevices.lamp; updateIoTUI(); });
-document.getElementById('toggleWatch').addEventListener('click', () => { iotDevices.watch = !iotDevices.watch; updateIoTUI(); });
-document.getElementById('toggleHeadphone').addEventListener('click', () => { iotDevices.headphone = !iotDevices.headphone; updateIoTUI(); });
-
-// ---------- D. WEARABLE FOCUS REMINDER (Smartwatch simulation) ----------
-let focusTimer = null;
-let focusSeconds = 0;
-
-function updateTimerDisplay() {
-  const mins = Math.floor(focusSeconds / 60);
-  const secs = focusSeconds % 60;
-  document.getElementById('timerDisplay').textContent = 
-    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-}
-
-function showNotification(title, message) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') {
-    new Notification(title, { body: message, icon: '📚' });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(perm => {
-      if (perm === 'granted') new Notification(title, { body: message, icon: '📚' });
-    });
-  }
-  document.getElementById('notificationStatus').textContent = '🔔 Notifications: ' + Notification.permission;
-}
-
-// Request notification permission on load
-if ('Notification' in window && Notification.permission === 'default') {
-  Notification.requestPermission();
-}
-document.getElementById('notificationStatus').textContent = '🔔 Notifications: ' + (Notification.permission || 'not requested');
-
-document.getElementById('startFocusBtn').addEventListener('click', function() {
-  const mins = parseInt(document.getElementById('focusMinutes').value) || 25;
-  if (focusTimer) return alert('A timer is already running. Stop it first.');
-  focusSeconds = mins * 60;
-  updateTimerDisplay();
-  focusTimer = setInterval(() => {
-    focusSeconds--;
-    updateTimerDisplay();
-    if (focusSeconds <= 0) {
-      clearInterval(focusTimer);
-      focusTimer = null;
-      showNotification('⌚ WEARABLE ALERT!', 'Study session complete! Time for a break, shinobi! 🍵');
-      document.getElementById('timerDisplay').textContent = '00:00';
-    }
-  }, 1000);
-  showNotification('⌚ Focus mode engaged', `Study for ${mins} minutes. You got this! 🔥`);
-});
-
-document.getElementById('stopFocusBtn').addEventListener('click', function() {
-  if (focusTimer) {
-    clearInterval(focusTimer);
-    focusTimer = null;
-    focusSeconds = 0;
-    updateTimerDisplay();
-    document.getElementById('timerDisplay').textContent = '00:00';
-    showNotification('⌚ Focus stopped', 'Timer was cancelled. Rest when you need to.');
-  } else {
-    alert('No timer running.');
-  }
-});
-
-// ---------- E. BACKUP & RESTORE (for cross‑device use) ----------
+// ---------- C. BACKUP & RESTORE (cross‑device sync) ----------
 function exportData() {
   const data = {
     studyAssistant_name: localStorage.getItem('studyAssistant_name'),
     studyAssistant_days: localStorage.getItem('studyAssistant_days'),
-    maintenanceTasks: JSON.parse(localStorage.getItem('maintenanceTasks') || '[]'),
     componentInventory: JSON.parse(localStorage.getItem('componentInventory') || '[]'),
-    // Also export all subject/grade data
     subjects: {},
     grades: {}
   };
@@ -538,7 +470,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'anime_dojo_backup.json';
+  a.download = 'study_dojo_backup.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -548,10 +480,8 @@ function importData(file) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      // Restore each piece
       if (data.studyAssistant_name) localStorage.setItem('studyAssistant_name', data.studyAssistant_name);
       if (data.studyAssistant_days) localStorage.setItem('studyAssistant_days', data.studyAssistant_days);
-      if (data.maintenanceTasks) localStorage.setItem('maintenanceTasks', JSON.stringify(data.maintenanceTasks));
       if (data.componentInventory) localStorage.setItem('componentInventory', JSON.stringify(data.componentInventory));
       if (data.subjects) {
         for (let i = 1; i <= 7; i++) {
@@ -565,14 +495,12 @@ function importData(file) {
           if (data.grades[`grade-${i}`] !== undefined) localStorage.setItem(key, data.grades[`grade-${i}`]);
         }
       }
-      alert('Data imported successfully! Please refresh the page to see all your data.');
-      // Reload all UI
+      alert('Data imported successfully! Refresh to see all your data.');
       loadSavedData();
-      loadTasks();
       loadComponents();
       updateIoTUI();
     } catch (err) {
-      alert('Failed to import data. Please check the file format.');
+      alert('Failed to import. Check the file format.');
     }
   };
   reader.readAsText(file);
@@ -583,13 +511,12 @@ document.getElementById('importBtn').addEventListener('click', () => document.ge
 document.getElementById('importFile').addEventListener('change', function(e) {
   if (this.files.length) {
     importData(this.files[0]);
-    this.value = ''; // reset so same file can be chosen again
+    this.value = '';
   }
 });
 
-// ---------- Load extra data on start ----------
+// ---------- D. LOAD EXTRA DATA on start ----------
 document.addEventListener('DOMContentLoaded', function() {
-  loadTasks();
   loadComponents();
   updateIoTUI();
 });
