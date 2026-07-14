@@ -9,53 +9,116 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+
+    <!-- ===================== HEADER ===================== -->
     <header class="dojo-header">
       <h1>⚡ <span>ANIME</span> STUDY DOJO</h1>
       <p>🔥 Train your brain. Dominate your exams. Plus Ultra! 🔥</p>
     </header>
 
-    <!-- User Identity -->
+    <!-- ===================== USER NAME ===================== -->
     <section class="user-section">
       <label for="name">👤 YOUR NAME (SHINOBI REGISTRY)</label>
       <input type="text" id="name" placeholder="e.g., Naruto Uzumaki" autofocus>
     </section>
 
-    <!-- Custom Subject Grid (7 Slots) -->
+    <!-- ===================== SUBJECT & GRADE REGISTER ===================== -->
     <section class="marks-section">
       <h2>📜 SUBJECT & GRADE REGISTER</h2>
       <p class="subtext">Enter your subjects and power levels (0–100). Leave unused slots empty.</p>
-      <div class="subject-grid" id="subjectGrid">
-        <!-- 7 Rows will be populated by JS or static -->
-      </div>
+      <div class="subject-grid" id="subjectGrid"></div>
     </section>
 
-    <!-- Exam Countdown -->
+    <!-- ===================== DAYS UNTIL EXAM ===================== -->
     <section class="exam-section">
       <h2>⏳ DAYS UNTIL FINAL BOSS (EXAM)</h2>
       <input type="number" id="days" min="0" max="365" placeholder="e.g., 14">
     </section>
 
-    <!-- Action Buttons -->
+    <!-- ===================== ACTION BUTTONS ===================== -->
     <div class="actions">
       <button id="analyzeBtn">🔥 RUN ANALYSIS</button>
       <button id="clearBtn" class="clear">🗑️ RESET DOJO</button>
       <button id="printBtn" class="print">📜 PRINT SCROLL</button>
     </div>
 
-    <!-- Results / Motivation Area -->
+    <!-- ===================== RESULTS / MOTIVATION ===================== -->
     <div id="results" class="results-card">
       <p style="color: #8899aa;">💪 Enter your stats and hit <strong>Run Analysis</strong> to get your personalized training plan!</p>
     </div>
 
-    <footer>
-      <p>© 2026 Anime Study Dojo. All rights reserved by David Mutesa.
-        <p>Made with ❤️ for anime fans and students worldwide.</p>
-        <p> contact me @ davidmutesajunoir@gmail.com</p>
-      </p>
+    <!-- ===================== EXTRA MODULES (FOCUS AREAS) ===================== -->
+    <hr style="border-color:#2a2a44; margin: 30px 0;">
 
+    <!-- ===== REPAIR & MAINTENANCE LOG ===== -->
+    <h2>🔧 REPAIR & MAINTENANCE LOG</h2>
+    <section class="maintenance-section">
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+        <input type="text" id="taskInput" placeholder="Maintenance task (e.g., Cleaned fan)">
+        <input type="text" id="taskStatus" placeholder="Status (Done / Pending)">
+        <button id="addTaskBtn" style="background:#ffdd00; color:#0a0815; font-weight:bold; padding:8px;">➕ Add</button>
+      </div>
+      <div id="taskList" style="background:#0e0c1a; padding:10px; border-radius:12px; border:1px solid #2a2a44;">
+        <p style="color:#445566;">No tasks yet. Add a maintenance task.</p>
+      </div>
+    </section>
+
+    <!-- ===== COMPONENT INVENTORY (Industrial Electronics) ===== -->
+    <h2>⚙️ COMPONENT INVENTORY</h2>
+    <section class="component-section">
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+        <input type="text" id="compName" placeholder="Component (e.g., Arduino Uno)">
+        <input type="text" id="compSpec" placeholder="Spec (e.g., 16MHz)">
+        <input type="number" id="compQty" placeholder="Qty" min="0">
+        <button id="addCompBtn" style="background:#00f0ff; color:#0a0815; font-weight:bold; padding:8px;">➕ Add</button>
+      </div>
+      <div id="componentList" style="background:#0e0c1a; padding:10px; border-radius:12px; border:1px solid #2a2a44;">
+        <p style="color:#445566;">No components added yet.</p>
+      </div>
+    </section>
+
+    <!-- ===== IoT DEVICE STATUS (Communication Tech) ===== -->
+    <h2>📡 IoT DEVICE STATUS</h2>
+    <section class="iot-section">
+      <div style="display:flex; flex-wrap:wrap; gap:20px; background:#0e0c1a; padding:15px; border-radius:12px; border:1px solid #2a2a44;">
+        <div><b>💡 Smart Lamp:</b> <span id="lampStatus" style="color:#ffdd00;">ONLINE</span> <button id="toggleLamp" style="background:#2a2a44; color:white; padding:4px 12px; border-radius:12px;">Toggle</button></div>
+        <div><b>⌚ Smart Watch:</b> <span id="watchStatus" style="color:#00f0ff;">ONLINE</span> <button id="toggleWatch" style="background:#2a2a44; color:white; padding:4px 12px; border-radius:12px;">Toggle</button></div>
+        <div><b>🎧 Noise Cancelling:</b> <span id="headphoneStatus" style="color:#00f0ff;">ONLINE</span> <button id="toggleHeadphone" style="background:#2a2a44; color:white; padding:4px 12px; border-radius:12px;">Toggle</button></div>
+      </div>
+    </section>
+
+    <!-- ===== WEARABLE FOCUS REMINDER ===== -->
+    <h2>⌚ WEARABLE FOCUS REMINDER</h2>
+    <section class="wearable-section">
+      <p style="color:#8899aa;">Set a study timer – it will buzz (send a notification) like a smartwatch!</p>
+      <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+        <input type="number" id="focusMinutes" placeholder="Minutes (e.g., 25)" min="1" max="120" style="max-width:150px;">
+        <button id="startFocusBtn" style="background:#ff2a75; color:white; font-weight:bold;">⏰ START FOCUS</button>
+        <button id="stopFocusBtn" style="background:#2a2a44; color:#99aabb; font-weight:bold;">⏹ STOP</button>
+        <span id="timerDisplay" style="color:#ffdd00; font-family:monospace; font-size:1.2rem;">00:00</span>
+      </div>
+      <div id="notificationStatus" style="margin-top:10px; color:#8899aa; font-size:0.8rem;">🔔 Notifications: Not requested</div>
+    </section>
+
+    <!-- ===================== BACKUP / RESTORE (FOR MULTI‑DEVICE SYNC) ===================== -->
+    <hr style="border-color:#2a2a44; margin: 30px 0;">
+    <h2>💾 BACKUP & RESTORE</h2>
+    <section class="backup-section">
+      <p style="color:#8899aa;">Export your data to a JSON file – then import it on another device to carry your progress!</p>
+      <div style="display:flex; gap:15px; flex-wrap:wrap;">
+        <button id="exportBtn" style="background:#00f0ff; color:#0a0815; font-weight:bold;">📥 Export Data</button>
+        <button id="importBtn" style="background:#ffdd00; color:#0a0815; font-weight:bold;">📤 Import Data</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+      </div>
+    </section>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+      <p>2026 Study Buddy. All rights reserved by David mutesa.</p>
+      <p>Contact: davidmutesajunoir@gmail.com</p>
     </footer>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
