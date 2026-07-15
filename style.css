@@ -62,7 +62,7 @@ body::before {
   box-shadow: 0 0 40px rgba(0, 240, 255, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.8);
   position: relative;
   /* glitch flicker on container */
-  animation: containerFlicker 3s infinite;
+  animation: containerFlicker 2s infinite;
 }
 
 @keyframes containerFlicker {
