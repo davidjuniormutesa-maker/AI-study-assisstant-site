@@ -1,7 +1,8 @@
 /* ======================================================
-   STUDY DOJO - SYSTEM UI
-   Inspired by Sung Jin-Woo's system from Solo Leveling
-   Dark, glitchy, flickering, futuristic
+   STUDY DOJO - SYSTEM UI (Sung Jin-Woo inspired)
+   No scanlines, safe for light-sensitive users.
+   Glitch effects are subtle, realistic, and applied
+   to multiple elements.
    ====================================================== */
 
 /* ----- RESET & BASE ----- */
@@ -13,7 +14,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #0a0a12; /* deep dark blue-black */
+  background: #0a0a12;
   background-image: radial-gradient(circle at 30% 40%, #111a2e 0%, #05070d 90%);
   min-height: 100vh;
   display: flex;
@@ -21,33 +22,6 @@ body {
   align-items: center;
   padding: 2rem 1rem;
   color: #b0c8dd;
-  /* Glitch effect overlay (scanlines) */
-  position: relative;
-}
-
-/* ----- SCANLINE OVERLAY (glitch effect) ----- */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 240, 255, 0.03) 0px,
-    rgba(0, 240, 255, 0.03) 2px,
-    transparent 2px,
-    transparent 6px
-  );
-  z-index: 9999;
-  animation: scanlines 0.2s linear infinite;
-}
-
-@keyframes scanlines {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(6px); }
 }
 
 /* ----- MAIN CONTAINER (System Window) ----- */
@@ -58,62 +32,88 @@ body::before {
   width: 100%;
   border-radius: 32px;
   padding: 2.5rem 2rem;
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  border: 1px solid rgba(0, 240, 255, 0.2);
   box-shadow: 0 0 40px rgba(0, 240, 255, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.8);
   position: relative;
-  /* glitch flicker on container */
-  animation: containerFlicker 3s infinite;
+  /* subtle flicker on the whole container (rare, safe) */
+  animation: containerFlicker 6s infinite;
 }
 
 @keyframes containerFlicker {
   0%, 95%, 100% { opacity: 1; }
-  96% { opacity: 0.7; }
+  96% { opacity: 0.85; }
   97% { opacity: 1; }
-  98% { opacity: 0.5; }
+  98% { opacity: 0.9; }
   99% { opacity: 1; }
 }
 
-/* ----- HEADER (glitchy text) ----- */
+/* ----- HEADER (centered, no lightning) ----- */
+.dojo-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
 .dojo-header h1 {
   font-family: 'Orbitron', monospace;
-  font-size: 2.4rem;
+  font-size: 2.6rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   color: #d4af37; /* gold */
   text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af3755;
-  margin-bottom: 0.2rem;
-  animation: glitchText 2.5s infinite;
+  display: inline-block;
+  /* Glitch effect on title (more realistic) */
+  animation: glitchReal 3s infinite;
+  position: relative;
 }
 
-.dojo-header h1 span {
+/* Realistic glitch: shift, cut, and color flash */
+@keyframes glitchReal {
+  0%, 90%, 100% { transform: translate(0); opacity: 1; }
+  92% { transform: translate(-2px, 1px) skewX(1deg); opacity: 0.9; color: #d4af37; }
+  93% { transform: translate(2px, -1px) skewX(-1deg); opacity: 0.8; color: #00f0ff; }
+  94% { transform: translate(-1px, 0) skewX(0.5deg); opacity: 0.95; color: #d4af37; }
+  95% { transform: translate(0); opacity: 1; }
+}
+
+/* Glitch overlay on the title (fake "tearing" effect) */
+.dojo-header h1::before {
+  content: "STUDY DOJO";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   color: #00f0ff;
-  text-shadow: 0 0 10px #00f0ff;
+  opacity: 0;
+  animation: glitchOverlay 4s infinite;
+  pointer-events: none;
 }
 
-/* Glitch text flicker */
-@keyframes glitchText {
-  0%, 90%, 100% { transform: skew(0deg); opacity: 1; }
-  92% { transform: skew(2deg); opacity: 0.8; }
-  94% { transform: skew(-2deg); opacity: 0.9; }
-  96% { transform: skew(0deg); opacity: 1; }
+@keyframes glitchOverlay {
+  0%, 90%, 100% { opacity: 0; transform: translate(0); }
+  92% { opacity: 0.3; transform: translate(-3px, 0); }
+  94% { opacity: 0.2; transform: translate(3px, 1px); }
+  96% { opacity: 0.4; transform: translate(-1px, -1px); }
 }
 
 .dojo-header p {
   color: #8899bb;
   border-left: 3px solid #d4af37;
   padding-left: 1rem;
-  margin: 10px 0 20px 0;
-  font-size: 1.1rem;
-  animation: fadePulse 3s infinite;
+  margin: 0.5rem auto 0;
+  display: inline-block;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  animation: fadePulse 4s infinite;
 }
 
 @keyframes fadePulse {
-  0%, 100% { opacity: 0.8; }
+  0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
 }
 
-/* ----- SECTION HEADINGS ----- */
+/* ----- SECTION HEADINGS (with glitch on hover) ----- */
 h2 {
   font-family: 'Orbitron', monospace;
   font-size: 1.1rem;
@@ -124,6 +124,11 @@ h2 {
   padding-bottom: 5px;
   margin-bottom: 15px;
   text-shadow: 0 0 5px #00f0ff55;
+  transition: 0.2s;
+}
+
+h2:hover {
+  animation: glitchReal 1.5s infinite;
 }
 
 .subtext {
@@ -136,7 +141,7 @@ section {
   margin-bottom: 25px;
 }
 
-/* ----- LABELS & INPUTS (system-like) ----- */
+/* ----- LABELS & INPUTS ----- */
 label {
   display: block;
   font-weight: 600;
@@ -156,13 +161,12 @@ input {
   color: #ddeeff;
   width: 100%;
   transition: 0.2s;
-  font-family: 'Inter', sans-serif;
 }
 
 input:focus {
   border-color: #00f0ff;
   outline: none;
-  box-shadow: 0 0 15px #00f0ff22, inset 0 0 10px #00f0ff11;
+  box-shadow: 0 0 15px #00f0ff22;
 }
 
 input::placeholder {
@@ -210,6 +214,12 @@ button {
   background: #0d0d1a;
   color: #99aabb;
   transition: 0.2s;
+  position: relative;
+}
+
+/* Glitch on buttons when hovered */
+button:hover {
+  animation: glitchReal 1.2s infinite;
 }
 
 #analyzeBtn {
@@ -243,7 +253,7 @@ button {
   box-shadow: 0 0 30px #00f0ff;
 }
 
-/* ----- RESULTS CARD (glitchy display) ----- */
+/* ----- RESULTS CARD (with glitch on hover) ----- */
 .results-card {
   margin-top: 20px;
   padding: 20px;
@@ -252,15 +262,11 @@ button {
   border: 1px solid #1a1a2e;
   min-height: 100px;
   line-height: 1.8;
-  animation: resultGlitch 4s infinite;
+  transition: 0.3s;
 }
 
-@keyframes resultGlitch {
-  0%, 95%, 100% { opacity: 1; border-color: #1a1a2e; }
-  96% { opacity: 0.6; border-color: #d4af37; }
-  97% { opacity: 1; border-color: #1a1a2e; }
-  98% { opacity: 0.4; border-color: #00f0ff; }
-  99% { opacity: 1; border-color: #1a1a2e; }
+.results-card:hover {
+  animation: glitchReal 2s infinite;
 }
 
 .results-card h2 {
@@ -280,7 +286,7 @@ button {
   margin: 8px 0;
 }
 
-/* ----- PRIORITY BADGES ----- */
+/* ----- PRIORITY BADGES (colours unchanged) ----- */
 .results-card .priority-high {
   color: #ff2a75;
   font-weight: 700;
@@ -317,12 +323,11 @@ button {
   margin-top: 15px;
   font-style: italic;
   color: #cce0ee;
-  animation: motGlow 3s infinite alternate;
+  transition: 0.3s;
 }
 
-@keyframes motGlow {
-  0% { border-color: #d4af37; box-shadow: 0 0 5px #d4af3722; }
-  100% { border-color: #00f0ff; box-shadow: 0 0 15px #00f0ff22; }
+.motivation-block:hover {
+  animation: glitchReal 2.5s infinite;
 }
 
 /* ----- FOOTER ----- */
@@ -340,7 +345,7 @@ footer {
 @media (max-width: 600px) {
   .container { padding: 20px; }
   .subject-row { grid-template-columns: 1fr; gap: 8px; }
-  .dojo-header h1 { font-size: 1.6rem; }
+  .dojo-header h1 { font-size: 1.8rem; }
   .actions { flex-direction: column; }
   button { width: 100%; }
 }
