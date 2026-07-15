@@ -35,8 +35,7 @@ body {
   border: 1px solid rgba(0, 240, 255, 0.2);
   box-shadow: 0 0 40px rgba(0, 240, 255, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.8);
   position: relative;
-  /* subtle flicker on the whole container (rare, safe) */
-  animation: containerFlicker 6s infinite;
+  animation: containerFlicker 2s infinite;
 }
 
 @keyframes containerFlicker {
@@ -47,10 +46,10 @@ body {
   99% { opacity: 1; }
 }
 
-/* ----- HEADER (centered, no lightning) ----- */
+/* ===== HEADER - CENTERED (fixed!) ===== */
 .dojo-header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .dojo-header h1 {
@@ -59,15 +58,15 @@ body {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 4px;
-  color: #d4af37; /* gold */
+  color: #d4af37;
   text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af3755;
   display: inline-block;
-  /* Glitch effect on title (more realistic) */
-  animation: glitchReal 3s infinite;
+  animation: glitchReal 2s infinite;
   position: relative;
+  margin-bottom: 0.2rem; /* space between title and subtitle */
 }
 
-/* Realistic glitch: shift, cut, and color flash */
+/* Glitch effect on title */
 @keyframes glitchReal {
   0%, 90%, 100% { transform: translate(0); opacity: 1; }
   92% { transform: translate(-2px, 1px) skewX(1deg); opacity: 0.9; color: #d4af37; }
@@ -76,7 +75,6 @@ body {
   95% { transform: translate(0); opacity: 1; }
 }
 
-/* Glitch overlay on the title (fake "tearing" effect) */
 .dojo-header h1::before {
   content: "STUDY DOJO";
   position: absolute;
@@ -86,7 +84,7 @@ body {
   height: 100%;
   color: #00f0ff;
   opacity: 0;
-  animation: glitchOverlay 4s infinite;
+  animation: glitchOverlay 2s infinite;
   pointer-events: none;
 }
 
@@ -99,13 +97,13 @@ body {
 
 .dojo-header p {
   color: #8899bb;
-  border-left: 3px solid #d4af37;
-  padding-left: 1rem;
-  margin: 0.5rem auto 0;
-  display: inline-block;
   font-size: 1rem;
   letter-spacing: 1px;
-  animation: fadePulse 4s infinite;
+  animation: fadePulse 2s infinite;
+  margin: 0 auto;  /* centers it */
+  display: block;  /* ensures it takes full width for centering */
+  text-align: center;
+  max-width: 80%;  /* keeps it from being too wide on big screens */
 }
 
 @keyframes fadePulse {
@@ -217,9 +215,8 @@ button {
   position: relative;
 }
 
-/* Glitch on buttons when hovered */
 button:hover {
-  animation: glitchReal 1.2s infinite;
+  animation: glitchReal 1.1s infinite;
 }
 
 #analyzeBtn {
@@ -266,7 +263,7 @@ button:hover {
 }
 
 .results-card:hover {
-  animation: glitchReal 2s infinite;
+  animation: glitchReal 1.1s infinite;
 }
 
 .results-card h2 {
@@ -327,7 +324,7 @@ button:hover {
 }
 
 .motivation-block:hover {
-  animation: glitchReal 2.5s infinite;
+  animation: glitchReal 1.1s infinite;
 }
 
 /* ----- FOOTER ----- */
@@ -338,7 +335,7 @@ footer {
   text-align: center;
   border-top: 1px solid #1a1a2e;
   padding-top: 15px;
-  animation: fadePulse 4s infinite;
+  animation: fadePulse 2s infinite;
 }
 
 /* ----- RESPONSIVE (phones) ----- */
