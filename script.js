@@ -1,7 +1,7 @@
 // ======================================================
 // STUDY DOJO - SYSTEM LOGIC
-// 8 subject slots, minimum 3 required, auto-correct,
-// priority logic based on days remaining (per week)
+// 8 subject slots, min 3 required, auto-correct,
+// priority based on days remaining (per week)
 // ======================================================
 
 // ----- DOM REFERENCES -----
@@ -31,49 +31,31 @@ function buildSubjectGrid() {
 }
 buildSubjectGrid();
 
-// ----- AUTO-CORRECT DICTIONARY (for subject names) -----
+// ----- AUTO-CORRECT DICTIONARY (subject names) -----
 const corrections = {
-  'math': 'Mathematics',
-  'maths': 'Mathematics',
-  'physic': 'Physics',
-  'chem': 'Chemistry',
-  'bio': 'Biology',
-  'hist': 'History',
-  'geo': 'Geography',
-  'eng': 'English',
-  'lit': 'Literature',
-  'ict': 'Computer Studies',
-  'comp': 'Computer Studies',
-  'cs': 'Computer Studies',
-  'bus': 'Business Studies',
-  'eco': 'Economics',
-  'acc': 'Accounting',
-  'art': 'Art',
-  'music': 'Music',
-  'pe': 'Physical Education',
-  'psych': 'Psychology',
-  'soc': 'Sociology',
-  'stat': 'Statistics',
-  'calc': 'Calculus',
-  'alg': 'Algebra',
-  'trig': 'Trigonometry'
+  'math': 'Mathematics', 'maths': 'Mathematics',
+  'physic': 'Physics', 'chem': 'Chemistry', 'bio': 'Biology',
+  'hist': 'History', 'geo': 'Geography', 'eng': 'English',
+  'lit': 'Literature', 'ict': 'Computer Studies',
+  'comp': 'Computer Studies', 'cs': 'Computer Studies',
+  'bus': 'Business Studies', 'eco': 'Economics',
+  'acc': 'Accounting', 'art': 'Art', 'music': 'Music',
+  'pe': 'Physical Education', 'psych': 'Psychology',
+  'soc': 'Sociology', 'stat': 'Statistics',
+  'calc': 'Calculus', 'alg': 'Algebra', 'trig': 'Trigonometry'
 };
 
 function autoCorrectSubject(name) {
   const lower = name.trim().toLowerCase();
-  // Check exact match first
   if (corrections[lower]) return corrections[lower];
-  // Check if name starts with any key (e.g., "Bio" → "Biology")
   for (const [key, value] of Object.entries(corrections)) {
     if (lower.startsWith(key)) return value;
   }
-  // Capitalize first letter of each word (fallback)
   return name.trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
 // ----- MOTIVATIONAL QUOTES (100+ curated) -----
 const motivationQuotes = [
-  // Anime quotes
   "Believe in the me that believes in you! – Kamina (Gurren Lagann)",
   "A dropout will beat a genius through hard work. – Rock Lee (Naruto)",
   "If you don't like your destiny, don't accept it. – Naruto Uzumaki",
@@ -89,7 +71,6 @@ const motivationQuotes = [
   "Plus Ultra! – All Might",
   "Even the smallest person can change the course of the future.",
   "It's not the strength of the body, but the strength of the spirit.",
-  // Original study quotes
   "Success is the sum of small efforts repeated day in and day out.",
   "Don't study until you get it right. Study until you can't get it wrong.",
   "The secret of getting ahead is getting started.",
@@ -190,7 +171,6 @@ const motivationQuotes = [
   "Education is not preparation for life; education is life itself."
 ];
 
-// Get 3 random quotes for motivation boost
 function getRandomMotivationQuotes() {
   const shuffled = [...motivationQuotes];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -200,22 +180,14 @@ function getRandomMotivationQuotes() {
   return shuffled.slice(0, 3);
 }
 
-// ----- PRIORITY LOGIC (based on days remaining) -----
-// Base study time per week per subject (in minutes)
-// The further the exam, the less time you study per week.
-// As days decrease, study time increases linearly.
-
+// ----- PRIORITY LOGIC (per week, based on days) -----
 function getPriority(mark, days) {
-  // Base weekly minutes by grade (independent of days)
-  let baseWeekly = 60; // default: 1 hour/week
-  if (mark < 40) baseWeekly = 150;  // 2.5 hrs/week (HIGH)
-  else if (mark < 60) baseWeekly = 100; // ~1.7 hrs/week (MEDIUM)
-  else if (mark < 75) baseWeekly = 70;  // ~1.2 hrs/week (LOW)
-  else baseWeekly = 45;  // VERY LOW
+  let baseWeekly = 60;
+  if (mark < 40) baseWeekly = 150;
+  else if (mark < 60) baseWeekly = 100;
+  else if (mark < 75) baseWeekly = 70;
+  else baseWeekly = 45;
 
-  // Adjust based on days remaining (multiplier)
-  // If days = 0 (exam tomorrow), multiplier = 2.0 (double intensity)
-  // If days = 60+ (far away), multiplier = 0.6 (reduce intensity)
   let multiplier = 1.0;
   if (days <= 3) multiplier = 2.0;
   else if (days <= 7) multiplier = 1.7;
@@ -223,11 +195,10 @@ function getPriority(mark, days) {
   else if (days <= 21) multiplier = 1.3;
   else if (days <= 30) multiplier = 1.1;
   else if (days <= 45) multiplier = 0.9;
-  else multiplier = 0.7; // far away
+  else multiplier = 0.7;
 
   const weeklyMinutes = Math.round(baseWeekly * multiplier);
 
-  // Priority level (based on mark only)
   let level, colorClass;
   if (mark < 40) { level = 'HIGH PRIORITY'; colorClass = 'priority-high'; }
   else if (mark < 60) { level = 'MEDIUM PRIORITY'; colorClass = 'priority-medium'; }
@@ -237,7 +208,7 @@ function getPriority(mark, days) {
   return { level, colorClass, weeklyMinutes };
 }
 
-// ----- MAIN ANALYSIS FUNCTION -----
+// ----- MAIN ANALYSIS -----
 function analyze() {
   const name = nameInput.value.trim() || 'Student';
   const days = Number(daysInput.value.trim());
@@ -246,7 +217,6 @@ function analyze() {
     return;
   }
 
-  // Collect subjects and grades
   const subjects = {};
   let filledSlots = 0;
   let isValid = true;
@@ -258,10 +228,9 @@ function analyze() {
     let subjectName = subjInput.value.trim();
     const gradeVal = gradeInput.value.trim();
 
-    // Auto-correct subject name
     if (subjectName !== '') {
       subjectName = autoCorrectSubject(subjectName);
-      subjInput.value = subjectName; // update field
+      subjInput.value = subjectName;
     }
 
     if (subjectName !== '' && gradeVal === '') {
@@ -286,7 +255,6 @@ function analyze() {
     subjects[subjectName] = grade;
   }
 
-  // Minimum 3 slots required
   if (filledSlots < 3) {
     resultsDiv.innerHTML = `<h2>⚠️ INSUFFICIENT DATA</h2><p>Please enter at least <b>3 subjects</b> with their grades.</p>`;
     return;
@@ -299,7 +267,6 @@ function analyze() {
     return;
   }
 
-  // Build output
   let output = `<h2>👋 HELLO, ${name.toUpperCase()}!</h2>`;
   output += `<h3>📊 YOUR WEEKLY STUDY PLAN</h3>`;
   output += `<p style="color:#8899aa;">📅 Exam in <b>${days}</b> day${days !== 1 ? 's' : ''}.</p>`;
@@ -318,7 +285,6 @@ function analyze() {
     }
   }
 
-  // Motivation Boost
   const quotes = getRandomMotivationQuotes();
   output += `<div class="motivation-block">`;
   output += `<h3>💥 MOTIVATION BOOST</h3>`;
@@ -328,7 +294,6 @@ function analyze() {
   output += `<p>🌟 <i>"${quotes[2]}"</i></p>`;
   output += `</div>`;
 
-  // Exam urgency message
   output += `<h3>⏳ EXAM COUNTDOWN (${days} days)</h3>`;
   if (days <= 3) {
     output += `<p>⚠️ <span style="color:#ff2a75;">ULTRA URGENT:</span> Final stretch! This is your last push.</p>`;
@@ -342,17 +307,14 @@ function analyze() {
     output += `<p>✅ You have plenty of time. Build a strong foundation now.</p>`;
   }
 
-  // Recommended order (weakest to strongest)
   const sorted = Object.entries(subjects).sort((a, b) => a[1] - b[1]);
   const order = sorted.map(([subj]) => subj).join(' → ');
   output += `<p><b>Recommended revision order:</b> ${order}</p>`;
-
-  // Total weekly time
   const hours = Math.round(totalWeekly / 60);
   const mins = totalWeekly % 60;
   output += `<p>📊 <b>Total weekly study time:</b> ${totalWeekly} minutes (${hours}h ${mins}m).</p>`;
 
-  // Save data
+  // Save to localStorage
   localStorage.setItem('studyAssistant_name', name);
   localStorage.setItem('studyAssistant_days', daysInput.value);
   for (let i = 1; i <= 8; i++) {
@@ -390,7 +352,7 @@ function clearAll() {
   localStorage.clear();
 }
 
-// ----- PRINT SCROLL (prints exact current display) -----
+// ----- PRINT SCROLL (exact display) -----
 function printResults() {
   const content = resultsDiv.innerHTML;
   if (!content || content.includes('ERROR') || content.includes('INSUFFICIENT')) {
@@ -425,11 +387,7 @@ function printResults() {
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('clearBtn').addEventListener('click', clearAll);
 document.getElementById('printBtn').addEventListener('click', printResults);
-
-// Enter key triggers analysis
 document.querySelectorAll('input').forEach(inp => inp.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
 }));
-
-// Load saved data on start
 window.addEventListener('DOMContentLoaded', loadSavedData);
