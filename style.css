@@ -313,11 +313,11 @@ button {
   background: #0f0a1a;
   padding: 15px;
   border-radius: 16px;
-  border: 1px dashed #cca934;
+  border: 1px dashed #d4af37;
   margin-top: 15px;
   font-style: italic;
   color: #cce0ee;
-  animation: motGlow 2s infinite alternate;
+  animation: motGlow 3s infinite alternate;
 }
 
 @keyframes motGlow {
@@ -333,7 +333,7 @@ footer {
   text-align: center;
   border-top: 1px solid #1a1a2e;
   padding-top: 15px;
-  animation: fadePulse 2s infinite;
+  animation: fadePulse 4s infinite;
 }
 
 /* ----- RESPONSIVE (phones) ----- */
