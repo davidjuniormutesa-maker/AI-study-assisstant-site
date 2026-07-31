@@ -84,7 +84,7 @@ body {
   height: 100%;
   color: #00f0ff;
   opacity: 0;
-  animation: glitchOverlay 1s infinite;
+  animation: glitchOverlay 1.5s infinite;
   pointer-events: none;
 }
 
@@ -99,7 +99,7 @@ body {
   color: #8899bb;
   font-size: 1rem;
   letter-spacing: 1px;
-  animation: fadePulse 1.5s infinite;
+  animation: fadePulse 1.6s infinite;
   margin: 0 auto;  /* centers it */
   display: block;  /* ensures it takes full width for centering */
   text-align: center;
@@ -122,11 +122,11 @@ h2 {
   padding-bottom: 5px;
   margin-bottom: 15px;
   text-shadow: 0 0 5px #00f0ff55;
-  transition: 0.2s;
+  transition: 0.3s;
 }
 
 h2:hover {
-  animation: glitchReal 1.5s infinite;
+  animation: glitchReal 1s infinite;
 }
 
 .subtext {
@@ -158,7 +158,7 @@ input {
   background: #0d0d1a;
   color: #ddeeff;
   width: 100%;
-  transition: 0.5s;
+  transition: 0.3s;
 }
 
 input:focus {
@@ -216,7 +216,7 @@ button {
 }
 
 button:hover {
-  animation: glitchReal 0.5s infinite;
+  animation: glitchReal 1s infinite;
 }
 
 #analyzeBtn {
@@ -324,7 +324,7 @@ button:hover {
 }
 
 .motivation-block:hover {
-  animation: glitchReal 2s infinite;
+  animation: glitchReal 1s infinite;
 }
 
 /* ----- FOOTER ----- */
@@ -335,7 +335,7 @@ footer {
   text-align: center;
   border-top: 1px solid #1a1a2e;
   padding-top: 15px;
-  animation: fadePulse 2s infinite;
+  animation: fadePulse 2.5s infinite;
 }
 
 /* ----- RESPONSIVE (phones) ----- */
