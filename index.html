@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Study Dojo System v3.1 — Intelligent study planner with personalized 6-day schedules, priority analysis, offline colour-PDF export, and motivational training plans.">
+  <meta name="description" content="Study Dojo System v3.2 — Intelligent study planner with daily-budget scheduling, priority analysis, offline colour-PDF export, and motivational training plans.">
   <meta name="theme-color" content="#0a0a12">
   <!-- Tells the browser to match native scrollbars / controls to our theme -->
   <meta name="color-scheme" content="dark light">
-  <title>STUDY DOJO · SYSTEM v3.1</title>
+  <title>STUDY DOJO · SYSTEM v3.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -15,28 +15,23 @@
 </head>
 <body>
 
-  <!-- ============================================================
+  <!-- ==========================================================
        LOADING SCREEN
-       script.js removes this on `load`, but a 4-second failsafe
-       also removes it in case a font request stalls. It's exposed
-       to screen readers via role="status" so blind users are told
-       something is happening rather than sitting in silence.
-       ============================================================ -->
+       Dismissed on `load`, plus a 4-second failsafe in script.js
+       so a stalled font request can never lock the UI.
+       ========================================================== -->
   <div class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
     <div class="loader-ring" aria-hidden="true"><div></div><div></div><div></div><div></div></div>
     <p class="loader-text">INITIALIZING SYSTEM...</p>
   </div>
 
-  <!-- Toast stack (max 3 visible at once — enforced in script.js) -->
+  <!-- Toast stack (max 3 visible — enforced in script.js) -->
   <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
-  <!-- Screen-reader-only live region. Results panel uses
-       aria-live="polite" without aria-atomic, so full plans are
-       not read aloud on every render. This region is used for
-       short status announcements instead. -->
+  <!-- Screen-reader live region for terse announcements -->
   <div class="sr-only" id="srStatus" role="status" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Decorative floating particles -->
+  <!-- Decorative particles -->
   <div class="bg-particles" aria-hidden="true">
     <span></span><span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span><span></span>
@@ -46,11 +41,7 @@
 
   <main class="container" id="systemContainer">
 
-    <!-- ============================================================
-         TOP BAR — History toggle + theme toggle.
-         aria-expanded / aria-controls / aria-pressed are kept in
-         sync by script.js so assistive tech knows the state.
-         ============================================================ -->
+    <!-- Top bar -->
     <div class="top-bar">
       <button class="icon-btn" id="historyBtn"
               aria-label="View analysis history"
@@ -66,12 +57,10 @@
       </button>
     </div>
 
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
+    <!-- Header -->
     <header class="dojo-header">
       <h1>STUDY DOJO</h1>
-      <p class="header-sub">System v3.1 — Train your brain. Dominate your exams. Export your battle plan.</p>
+      <p class="header-sub">System v3.2 — Fill your daily budget. Split it your way.</p>
     </header>
 
     <!-- ============================================================
@@ -82,38 +71,27 @@
       <!-- Hunter name -->
       <section class="user-section" aria-labelledby="userLabel">
         <label for="name" id="userLabel">USER REGISTRY</label>
-        <input type="text" id="name" placeholder="Enter your name, Hunter." autofocus maxlength="40" aria-required="true">
+        <input type="text" id="name" placeholder="Enter your name, Hunter."
+               autofocus maxlength="40" aria-required="true">
       </section>
 
-      <!-- ============================================================
-           SUBJECT & GRADE REGISTER
-           8 rows injected by script.js. Each row contains:
-             label, input, error span, suggestion chip.
-           Suggestions are shown (never applied silently) — clicking
-           or pressing Tab accepts them.
-           ============================================================ -->
+      <!-- Subject & grade register -->
       <section class="marks-section" aria-labelledby="subjectLabel">
         <h2 id="subjectLabel">SUBJECT &amp; GRADE REGISTER</h2>
         <p class="subtext">
           Enter at least 3 subjects and their power levels (0–100).
-          Common abbreviations (<em>chem</em>, <em>maths</em>, <em>bio</em>) are auto-detected
-          and shown as a suggestion chip you can accept with a click or Tab.
+          Common abbreviations (<em>chem</em>, <em>maths</em>, <em>bio</em>)
+          are auto-detected and shown as a suggestion chip you can accept
+          with a click or press Tab.
         </p>
-        <div class="subject-grid" id="subjectGrid">
-          <!-- Rows are built dynamically by script.js -->
-        </div>
+        <div class="subject-grid" id="subjectGrid"></div>
         <div class="subject-counter" aria-live="polite">
           <span id="subjectCount">0</span> / 8 subjects registered
           <span class="counter-bar" aria-hidden="true"><span class="counter-fill" id="counterFill"></span></span>
         </div>
       </section>
 
-      <!-- ============================================================
-           FINAL BOSS TIMER — days until exam + hours per day.
-           The "hoursPerDay" value is multiplied across Mon–Fri and
-           boosted 1.5× on Saturday. Sunday is a rest day and is not
-           included in the timetable.
-           ============================================================ -->
+      <!-- Final Boss Timer -->
       <section class="exam-section" aria-labelledby="examLabel">
         <h2 id="examLabel">FINAL BOSS TIMER</h2>
         <div class="exam-grid">
@@ -124,22 +102,53 @@
             <span class="exam-hint" id="examHint">Enter days remaining</span>
           </div>
           <div class="exam-field">
-            <label for="hoursPerDay">STUDY HOURS PER DAY</label>
+            <label for="hoursPerDay">STUDY HOURS PER DAY (MON–FRI)</label>
             <input type="number" id="hoursPerDay" min="0.5" max="16" step="0.5"
-                   value="3" aria-required="true" aria-describedby="hoursHint">
-            <span class="exam-hint" id="hoursHint">Mon–Fri at this rate · Saturday +50%</span>
+                   value="2" aria-required="true" aria-describedby="hoursHint">
+            <span class="exam-hint" id="hoursHint">Saturday gets +50% automatically</span>
           </div>
         </div>
         <p class="exam-note" id="weeklyCapacity">
-          Estimated weekly capacity: 19.5 hours · Sunday is a rest day.
+          Estimated weekly capacity: 13.0 hours · Sunday is a rest day.
         </p>
       </section>
 
-      <!-- ============================================================
-           OUTPUT FORMAT — offline PDF colour theme + paper size.
-           Theme colours are consumed by the PDF generator inside
-           script.js. No external libraries are required.
-           ============================================================ -->
+      <!-- ==========================================================
+           TIME DIVISION MODE — new in v3.2
+           This is the answer to "how should I split the time?"
+           - By Need  → weak subjects get more
+           - Equally  → every subject gets the same daily slice
+           The daily budget is always filled completely.
+           ========================================================== -->
+      <section class="split-section" aria-labelledby="splitLabel">
+        <h2 id="splitLabel">TIME DIVISION MODE</h2>
+        <p class="subtext">
+          Your full daily budget is used either way — this only decides
+          how it's split between subjects.
+        </p>
+        <div class="split-options" role="radiogroup" aria-labelledby="splitLabel">
+          <label class="split-option">
+            <input type="radio" name="splitMode" value="need" checked>
+            <span class="split-option-content">
+              <span class="split-option-title">By Need</span>
+              <span class="split-option-desc">
+                Weak subjects get more time, weighted by grade and how close the exam is.
+              </span>
+            </span>
+          </label>
+          <label class="split-option">
+            <input type="radio" name="splitMode" value="equal">
+            <span class="split-option-content">
+              <span class="split-option-title">Equally</span>
+              <span class="split-option-desc">
+                Every subject gets the same daily slice — good for touching all topics daily.
+              </span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Output format -->
       <section class="output-options-section" aria-labelledby="outputLabel">
         <h2 id="outputLabel">OUTPUT FORMAT</h2>
         <div class="output-options">
@@ -162,9 +171,7 @@
         </div>
       </section>
 
-      <!-- ============================================================
-           ACTION BUTTONS
-           ============================================================ -->
+      <!-- Actions -->
       <div class="actions">
         <button type="submit" id="analyzeBtn">
           <span class="btn-icon" aria-hidden="true">⚡</span> RUN ANALYSIS
@@ -181,11 +188,7 @@
       </div>
     </form>
 
-    <!-- ============================================================
-         RESULTS PANEL
-         aria-live="polite" (not atomic) so screen readers only
-         announce the change, not the entire plan.
-         ============================================================ -->
+    <!-- Results -->
     <section id="results" class="results-card" aria-live="polite">
       <div class="results-placeholder">
         <div class="placeholder-icon" aria-hidden="true">💪</div>
@@ -193,9 +196,7 @@
       </div>
     </section>
 
-    <!-- ============================================================
-         HISTORY SIDE PANEL
-         ============================================================ -->
+    <!-- History panel -->
     <aside class="history-panel" id="historyPanel" aria-label="Analysis history" hidden>
       <div class="history-header">
         <h2>ANALYSIS HISTORY</h2>
@@ -209,9 +210,7 @@
       <button class="btn-secondary btn-sm" id="clearHistory">Clear All History</button>
     </aside>
 
-    <!-- ============================================================
-         FOOTER
-         ============================================================ -->
+    <!-- Footer -->
     <footer>
       <p class="footer-quote">"Arise." – System</p>
       <p>© 2026 STUDY DOJO. All rights reserved by David Mutesa.</p>

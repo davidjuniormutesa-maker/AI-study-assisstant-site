@@ -1,23 +1,11 @@
 /* ==============================================================
-   STUDY DOJO — SYSTEM v3.1 UI
+   STUDY DOJO — SYSTEM v3.2 UI
    --------------------------------------------------------------
-   · CSS custom properties for theming (dark + light)
-   · Glassmorphism cards, animated background particles
-   · Fully responsive (mobile / tablet / desktop)
-   · Accessible focus rings, reduced-motion support
-   · Print-ready with colour preservation for the PDF fallback
-   --------------------------------------------------------------
-   CHANGELOG v3.0 → v3.1
-     · Fixed @keyframes barGrow (removed invalid !important)
-     · Added .exam-grid for side-by-side days + hours-per-day
-     · Added .output-options (PDF theme + paper size)
-     · Added .field-hint chip for inline auto-correct suggestions
-     · Added modal dialog styles for destructive confirmations
-     · Added .btn-danger for destructive actions
-     · Added .sr-only utility (visually hidden, still announced)
-     · Added color-scheme so native controls match the theme
-     · Reworked print stylesheet: page setup, break rules,
-       guaranteed colour output when saving to PDF
+   · CSS custom properties (dark + light)
+   · Glassmorphism · particle background · responsive
+   · Accessible focus rings · reduced-motion support
+   · Print-ready with colour preservation
+   · Split-mode radio cards · offline PDF friendly
    ============================================================== */
 
 /* ==============================================================
@@ -25,26 +13,22 @@
    ============================================================== */
 :root,
 [data-theme="dark"] {
-  /* Surfaces */
   --bg-primary: #080810;
   --bg-secondary: #0a0c18;
   --bg-card: rgba(12, 14, 26, 0.92);
   --bg-input: #0d0d1a;
   --bg-hover: #141428;
 
-  /* Borders */
   --border-primary: rgba(0, 240, 255, 0.15);
   --border-subtle: #1a1a2e;
   --border-focus: #00f0ff;
 
-  /* Text */
   --text-primary: #d0dff0;
   --text-secondary: #8899bb;
   --text-muted: #556677;
-  --text-heading: #d4af37;   /* gold */
-  --text-accent: #00f0ff;    /* cyan */
+  --text-heading: #d4af37;
+  --text-accent: #00f0ff;
 
-  /* Priority colours */
   --color-critical: #ff2a75;
   --color-high: #ff6b4a;
   --color-medium: #d4af37;
@@ -53,32 +37,25 @@
   --color-warning: #f39c12;
   --color-error: #e74c3c;
 
-  /* Shadows */
   --shadow-glow-cyan: rgba(0, 240, 255, 0.08);
   --shadow-glow-gold: rgba(212, 175, 55, 0.12);
   --shadow-inset: rgba(0, 0, 0, 0.6);
 
-  /* Glass */
   --glass-bg: rgba(12, 14, 26, 0.7);
   --glass-border: rgba(255, 255, 255, 0.06);
 
-  /* Radii */
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 24px;
   --radius-xl: 32px;
 
-  /* Motion */
   --transition-fast: 0.2s ease;
   --transition-med: 0.35s ease;
   --transition-slow: 0.5s ease;
 
-  /* Typography */
   --font-display: 'Orbitron', monospace;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Let the browser know both schemes are supported so form
-     controls and scrollbars render correctly. */
   color-scheme: dark light;
 }
 
@@ -121,9 +98,7 @@
 /* ==============================================================
    3. RESET & BASE
    ============================================================== */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -150,22 +125,17 @@ body {
   overflow-x: hidden;
 }
 
-/* Text selection */
 ::selection {
   background: var(--color-low);
   color: var(--bg-primary);
 }
 
-/* Keyboard focus only (not mouse) */
 :focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
-:focus:not(:focus-visible) {
-  outline: none;
-}
+:focus:not(:focus-visible) { outline: none; }
 
-/* Custom scrollbar (WebKit) */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb {
@@ -177,8 +147,6 @@ body {
 /* ==============================================================
    4. UTILITIES
    ============================================================== */
-
-/* Visually hidden but announced by screen readers. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -263,7 +231,6 @@ body {
   opacity: 0;
   animation: particleFloat linear infinite;
 }
-/* 20 particles with staggered delays / durations for organic feel */
 .bg-particles span:nth-child(1)  { left: 10%; animation-duration: 18s; animation-delay: 0s; }
 .bg-particles span:nth-child(2)  { left: 20%; animation-duration: 22s; animation-delay: 2s; }
 .bg-particles span:nth-child(3)  { left: 30%; animation-duration: 16s; animation-delay: 4s; }
@@ -317,7 +284,7 @@ body {
 }
 
 /* ==============================================================
-   8. TOP BAR — icon buttons
+   8. TOP BAR
    ============================================================== */
 .top-bar {
   display: flex;
@@ -343,12 +310,10 @@ body {
   color: var(--text-accent);
   border-color: var(--border-focus);
 }
-/* Visual feedback for aria-pressed (theme toggle) */
 .icon-btn[aria-pressed="true"] {
   color: var(--text-accent);
   border-color: var(--text-accent);
 }
-/* Visual feedback for aria-expanded (history toggle) */
 .icon-btn[aria-expanded="true"] {
   background: var(--bg-hover);
   color: var(--text-heading);
@@ -362,7 +327,6 @@ body {
   text-align: center;
   margin-bottom: 1.8rem;
 }
-
 .dojo-header h1 {
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 5vw, 2.8rem);
@@ -375,8 +339,6 @@ body {
   position: relative;
   margin-bottom: 0.3rem;
 }
-
-/* Subtle glitch on hover, purely decorative */
 .dojo-header h1::after {
   content: "STUDY DOJO";
   position: absolute;
@@ -417,7 +379,6 @@ h2 {
   margin-bottom: 14px;
   transition: var(--transition-fast);
 }
-
 h3 {
   font-family: var(--font-display);
   font-size: 0.8rem;
@@ -427,19 +388,16 @@ h3 {
   margin-bottom: 10px;
   letter-spacing: 1px;
 }
-
 h4 {
   color: var(--text-primary);
   font-size: 0.9rem;
   margin-bottom: 8px;
 }
-
 .subtext {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin-bottom: 14px;
 }
-
 section { margin-bottom: 22px; }
 
 /* ==============================================================
@@ -493,9 +451,7 @@ input.input-error {
 }
 
 /* ==============================================================
-   12. FIELD HINT — inline auto-correct suggestion chip.
-   Appears under an input when a correction is available.
-   Click or press Tab to accept.
+   12. FIELD HINT — inline auto-correct suggestion chip
    ============================================================== */
 .field-hint {
   display: none;
@@ -533,7 +489,6 @@ input.input-error {
   flex-direction: column;
   gap: 8px;
 }
-
 .subject-row {
   display: grid;
   grid-template-columns: 2fr 1fr 28px;
@@ -581,7 +536,6 @@ input.input-error {
   color: var(--color-error);
 }
 
-/* Subject counter */
 .subject-counter {
   display: flex;
   align-items: center;
@@ -608,7 +562,7 @@ input.input-error {
 .counter-fill.ready { background: var(--color-success); }
 
 /* ==============================================================
-   14. EXAM SECTION — days + hours side-by-side
+   14. EXAM SECTION
    ============================================================== */
 .exam-grid {
   display: grid;
@@ -626,7 +580,6 @@ input.input-error {
   color: var(--text-muted);
   transition: var(--transition-fast);
 }
-/* Urgency colour variants — applied by script.js */
 .exam-hint.urgent  { color: var(--color-critical); font-weight: 600; }
 .exam-hint.warning { color: var(--color-high);     font-weight: 600; }
 .exam-hint.caution { color: var(--color-medium); }
@@ -641,7 +594,86 @@ input.input-error {
 }
 
 /* ==============================================================
-   15. OUTPUT OPTIONS — PDF theme + paper size
+   15. SPLIT MODE — radio cards
+   ============================================================== */
+.split-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.split-option {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  align-items: flex-start;
+  user-select: none;
+}
+.split-option:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-secondary);
+}
+.split-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+.split-option::before {
+  content: '';
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 50%;
+  margin-top: 2px;
+  transition: var(--transition-fast);
+  background: var(--bg-primary);
+}
+.split-option:has(input:checked) {
+  background: var(--bg-hover);
+  border-color: var(--text-accent);
+  box-shadow: 0 0 14px var(--shadow-glow-cyan);
+}
+.split-option:has(input:checked)::before {
+  border-color: var(--text-accent);
+  box-shadow: inset 0 0 0 4px var(--text-accent);
+}
+.split-option:has(input:focus-visible) {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.split-option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.split-option-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+.split-option-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* ==============================================================
+   16. OUTPUT OPTIONS — PDF theme + paper size
    ============================================================== */
 .output-options {
   display: flex;
@@ -662,7 +694,7 @@ input.input-error {
 .output-option select { cursor: pointer; }
 
 /* ==============================================================
-   16. BUTTONS
+   17. BUTTONS
    ============================================================== */
 .actions {
   display: flex;
@@ -670,7 +702,6 @@ input.input-error {
   gap: 10px;
   margin: 22px 0 12px;
 }
-
 button {
   padding: 11px 18px;
   border: 1px solid var(--border-subtle);
@@ -693,8 +724,6 @@ button {
   justify-content: center;
   gap: 6px;
 }
-
-/* Sweeping shimmer on hover — decorative only */
 button::after {
   content: '';
   position: absolute;
@@ -705,18 +734,11 @@ button::after {
   pointer-events: none;
 }
 button:hover::after { transform: translateX(100%); }
-
-button:active { transform: scale(0.97); }
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+button:active       { transform: scale(0.97); }
+button:disabled     { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-icon { font-size: 0.9rem; }
 
-/* Primary — gold */
 #analyzeBtn {
   background: var(--text-heading);
   color: var(--bg-primary);
@@ -729,7 +751,6 @@ button:disabled {
   transform: translateY(-1px);
 }
 
-/* Secondary — muted */
 .btn-secondary {
   background: var(--bg-hover);
   color: var(--text-secondary);
@@ -739,7 +760,6 @@ button:disabled {
   color: var(--text-primary);
 }
 
-/* Accent — cyan (used by Save as PDF) */
 .btn-accent {
   background: var(--text-accent);
   color: var(--bg-primary);
@@ -751,7 +771,6 @@ button:disabled {
   transform: translateY(-1px);
 }
 
-/* Ghost — dashed border */
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
@@ -762,7 +781,6 @@ button:disabled {
   border-color: var(--text-secondary);
 }
 
-/* Danger — used by destructive confirmation dialogs */
 .btn-danger {
   background: var(--color-critical);
   color: #fff;
@@ -781,7 +799,7 @@ button:disabled {
 }
 
 /* ==============================================================
-   17. RESULTS CARD
+   18. RESULTS CARD
    ============================================================== */
 .results-card {
   margin-top: 18px;
@@ -793,12 +811,10 @@ button:disabled {
   line-height: 1.7;
   transition: var(--transition-med);
 }
-
 .results-card.results-loading {
   opacity: 0.6;
   pointer-events: none;
 }
-
 .results-placeholder {
   display: flex;
   flex-direction: column;
@@ -811,7 +827,6 @@ button:disabled {
 }
 .placeholder-icon { font-size: 2rem; opacity: 0.5; }
 
-/* Staggered entrance for direct children of the results card */
 .results-card.has-results > * {
   animation: resultSlideIn 0.4s ease-out backwards;
 }
@@ -841,7 +856,6 @@ button:disabled {
   border-bottom: none;
   margin-bottom: 14px;
 }
-
 .result-stats {
   display: flex;
   justify-content: center;
@@ -872,7 +886,7 @@ button:disabled {
   margin-top: 2px;
 }
 
-/* Urgency banner — used for exam countdown + schedule shortfall */
+/* Urgency banners */
 .urgency-banner {
   padding: 12px 16px;
   border-radius: var(--radius-md);
@@ -892,7 +906,7 @@ button:disabled {
 .urgency-icon { font-size: 1.2rem; }
 
 /* ==============================================================
-   18. GRADE CHART
+   19. GRADE CHART
    ============================================================== */
 .grade-chart {
   display: flex;
@@ -927,10 +941,6 @@ button:disabled {
   justify-content: flex-end;
   padding-right: 8px;
   min-width: 40px;
-  /* Uses --w (set inline by script.js) so the grow animation
-     actually has a start state. Animated declarations outrank
-     inline styles, so no !important is needed — and in fact
-     !important inside @keyframes is IGNORED by every browser. */
   width: var(--w, 0%);
   animation: barGrow 0.8s ease-out backwards;
   transition: width 0.5s ease;
@@ -963,7 +973,7 @@ button:disabled {
 .grade-badge.priority-low      { background: rgba(0,240,255,0.15);  color: var(--color-low);      }
 
 /* ==============================================================
-   19. PRIORITY BADGES
+   20. PRIORITY BADGES
    ============================================================== */
 .badge {
   display: inline-block;
@@ -980,7 +990,7 @@ button:disabled {
 .priority-low      { color: var(--color-low);      background: rgba(0,240,255,0.12);  border-left: 3px solid var(--color-low);      }
 
 /* ==============================================================
-   20. PLAN TABLE
+   21. PLAN TABLE
    ============================================================== */
 .plan-table-wrap { overflow-x: auto; margin-bottom: 4px; }
 .plan-table {
@@ -1005,9 +1015,15 @@ button:disabled {
 }
 .plan-table tr:last-child td { border-bottom: none; }
 .plan-table tr:hover td      { background: var(--bg-hover); }
+.plan-table td.col-daily {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--text-accent);
+  white-space: nowrap;
+}
 
 /* ==============================================================
-   21. TIMETABLE — Mon → Sat (no Sunday)
+   22. TIMETABLE
    ============================================================== */
 .timetable-wrap { overflow-x: auto; margin-bottom: 4px; }
 .timetable {
@@ -1057,7 +1073,6 @@ button:disabled {
 .session-chip.priority-medium   { background: rgba(212,175,55,0.10); color: var(--color-medium);   }
 .session-chip.priority-low      { background: rgba(0,240,255,0.10);  color: var(--color-low);      }
 
-/* Sunday rest row */
 .rest-day {
   color: var(--text-muted);
   font-style: italic;
@@ -1069,9 +1084,13 @@ button:disabled {
   color: var(--text-heading);
   white-space: nowrap;
 }
+.day-total small {
+  font-weight: 400;
+  color: var(--text-muted);
+}
 
 /* ==============================================================
-   22. TECHNIQUES GRID
+   23. TECHNIQUES GRID
    ============================================================== */
 .techniques-grid {
   display: grid;
@@ -1108,7 +1127,7 @@ button:disabled {
 }
 
 /* ==============================================================
-   23. MOTIVATION BLOCK
+   24. MOTIVATION BLOCK
    ============================================================== */
 .motivation-block {
   background: var(--bg-input);
@@ -1135,7 +1154,7 @@ button:disabled {
 .quote-marker { margin-right: 6px; }
 
 /* ==============================================================
-   24. REVISION ORDER
+   25. REVISION ORDER
    ============================================================== */
 .revision-order p {
   display: flex;
@@ -1157,7 +1176,7 @@ button:disabled {
 .order-chip.priority-low      { background: rgba(0,240,255,0.12);  color: var(--color-low);      }
 
 /* ==============================================================
-   25. TIPS BLOCK
+   26. TIPS BLOCK
    ============================================================== */
 .tips-block { margin-top: 18px; }
 .tips-block ul { list-style: none; padding: 0; }
@@ -1174,7 +1193,7 @@ button:disabled {
 }
 
 /* ==============================================================
-   26. HISTORY PANEL
+   27. HISTORY PANEL
    ============================================================== */
 .history-panel {
   margin-top: 18px;
@@ -1188,7 +1207,6 @@ button:disabled {
   from { opacity: 0; max-height: 0; }
   to   { opacity: 1; max-height: 800px; }
 }
-
 .history-header {
   display: flex;
   justify-content: space-between;
@@ -1216,7 +1234,8 @@ button:disabled {
   cursor: pointer;
   transition: var(--transition-fast);
 }
-.history-item:hover {
+.history-item:hover,
+.history-item:focus-visible {
   background: var(--bg-hover);
   border-color: var(--text-accent);
 }
@@ -1251,7 +1270,7 @@ button:disabled {
 }
 
 /* ==============================================================
-   27. MODAL — replaces window.confirm() for destructive actions
+   28. MODAL
    ============================================================== */
 .modal-overlay {
   position: fixed;
@@ -1287,7 +1306,6 @@ button:disabled {
   font-size: 0.95rem;
   color: var(--text-primary);
 }
-
 .modal-actions {
   display: flex;
   gap: 10px;
@@ -1300,8 +1318,7 @@ button:disabled {
 }
 
 /* ==============================================================
-   28. TOAST NOTIFICATIONS
-   Max 3 are visible at once — enforced in script.js.
+   29. TOASTS
    ============================================================== */
 .toast-container {
   position: fixed;
@@ -1333,7 +1350,7 @@ button:disabled {
 .toast-error   { background: rgba(231, 76, 60, 0.92); }
 
 /* ==============================================================
-   29. FOOTER
+   30. FOOTER
    ============================================================== */
 footer {
   margin-top: 28px;
@@ -1360,13 +1377,10 @@ kbd {
 }
 
 /* ==============================================================
-   30. REDUCED MOTION
-   Honours the OS-level "reduce motion" preference.
+   31. REDUCED MOTION
    ============================================================== */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -1376,7 +1390,7 @@ kbd {
 }
 
 /* ==============================================================
-   31. RESPONSIVE
+   32. RESPONSIVE
    ============================================================== */
 @media (max-width: 768px) {
   .container { padding: 1.5rem 1.2rem; border-radius: var(--radius-lg); }
@@ -1395,6 +1409,8 @@ kbd {
   .row-remove  { margin-top: 0; align-self: end; }
   .grade-row   { grid-template-columns: 90px 1fr 30px; gap: 6px; }
   .exam-grid   { grid-template-columns: 1fr; gap: 12px; }
+  .split-options { grid-template-columns: 1fr; }
+  .output-options { flex-direction: column; gap: 12px; }
   .actions     { flex-direction: column; }
   button       { width: 100%; }
   .result-stats { flex-direction: column; align-items: stretch; }
@@ -1407,18 +1423,14 @@ kbd {
 }
 
 /* ==============================================================
-   32. PRINT STYLESHEET — fallback for the built-in PDF generator.
-   The .pdfBtn uses script.js's offline generator, but if the user
-   triggers Ctrl+P we want a clean, colour-preserving output.
+   33. PRINT STYLESHEET
    ============================================================== */
 @media print {
-  /* Page setup */
   @page {
     size: A4;
     margin: 14mm 12mm;
   }
 
-  /* Force colour output — necessary for Chromium and Safari */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1432,7 +1444,6 @@ kbd {
     display: block;
   }
 
-  /* Hide everything except the results */
   .bg-particles,
   .loading-screen,
   .toast-container,
@@ -1465,7 +1476,6 @@ kbd {
     break-inside: auto;
   }
 
-  /* Keep small content units whole */
   .technique-card,
   .grade-row,
   .plan-table tr,
@@ -1476,7 +1486,6 @@ kbd {
   }
   h3 { break-after: avoid; }
 
-  /* Colour reinforcement for text on white */
   .result-header h2     { color: #333 !important; }
   h3                    { color: #555 !important; }
   .stat-chip            { border: 1px solid #ccc !important; background: #f9f9f9 !important; }
