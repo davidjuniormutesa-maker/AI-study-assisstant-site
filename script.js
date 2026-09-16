@@ -1,10 +1,12 @@
 // ==============================================================
-// STUDY DOJO — SYSTEM v3.3
+// STUDY DOJO — SYSTEM v3.4
 // ==============================================================
-// Daily-budget scheduler with subject ROTATION (never more than
-// 4 subjects per day, each subject studied 2-3× per week for
-// spaced repetition). User-selectable split mode (by need /
-// equal). Offline colour-PDF generator, history, accessible UI.
+// Daily-budget scheduler with subject ROTATION.
+//   · Monday–Friday: max 2 subjects per day
+//   · Saturday:      max 3 subjects per day
+//   · Sunday:        rest day
+// User-selectable split mode (by need / equal). Offline
+// colour-PDF generator, history, accessible UI.
 // ==============================================================
 
 'use strict';
@@ -731,24 +733,20 @@ function getPriority(mark, days) {
 // Two goals:
 //   1. Fill every day to capacity (weekday × hoursPerDay,
 //      Saturday × 1.5). Sunday is rest.
-//   2. Never crowd more than MAX_SUBJECTS_PER_DAY into one day.
-//      Instead, rotate subjects across the week so each one gets
-//      2–3 focused sessions — spaced repetition, no marathon days.
-//
-// Rotation strategy (applies to BOTH split modes):
-//   • Determine subjectsPerDay from the daily budget
-//     (target ≥ 30 min per subject, capped at 4).
-//   • Lay subjects on a flat sequence and slice it into 6 days
-//     using modular indexing — no repeats within a day, and
-//     every subject appears within ±1 session of each other.
+//   2. Keep each day focused:
+//        · Monday–Friday:  MAX 2 subjects per day
+//        · Saturday:       MAX 3 subjects per day
+//      Subjects rotate across the week so each one still gets
+//      multiple sessions for spaced repetition.
 //
 // Split mode controls only how the day's budget is divided
 // among THAT DAY'S subjects:
 //   • 'equal' → each subject on the day gets the same slice.
 //   • 'need'  → weighted by getPriority().weeklyMinutes.
 // ==============================================================
-const MIN_SESSION_MINUTES  = 30;  // aim for at least this per session
-const MAX_SUBJECTS_PER_DAY = 4;   // hard focus cap
+const MIN_SESSION_MINUTES    = 30;  // aim for at least this per session
+const MAX_SUBJECTS_WEEKDAY   = 2;   // Mon–Fri hard cap
+const MAX_SUBJECTS_SATURDAY  = 3;   // Saturday hard cap
 
 const PRIORITY_ORDER = {
   'priority-critical': 0,
@@ -758,32 +756,54 @@ const PRIORITY_ORDER = {
 };
 
 /**
- * Decide how many subjects a single study day should cover.
- * Never more than 4, never fewer than 2 (unless the user only
- * entered 1 subject), and always ≥ MIN_SESSION_MINUTES per
- * subject given the daily budget.
+ * Decide how many subjects a single day should cover.
+ * Hard cap depends on the day (2 on weekdays, 3 on Saturday).
+ * Never exceeds the number of subjects the user actually entered.
  */
-function determineSubjectsPerDay(dailyBudgetMinutes, totalSubjects) {
-  if (totalSubjects <= 3) return totalSubjects;
+function determineSubjectsPerDay(dailyBudgetMinutes, totalSubjects, isSaturday) {
+  const cap = isSaturday ? MAX_SUBJECTS_SATURDAY : MAX_SUBJECTS_WEEKDAY;
+
+  // Fewer subjects than the cap → show them all.
+  if (totalSubjects <= cap) return totalSubjects;
+
+  // Budget-driven count, respecting the day's cap.
   const byBudget = Math.floor(dailyBudgetMinutes / MIN_SESSION_MINUTES);
-  return Math.max(2, Math.min(MAX_SUBJECTS_PER_DAY, byBudget, totalSubjects));
+  return Math.max(1, Math.min(cap, byBudget, totalSubjects));
 }
 
 /**
- * Build a 6-day rotation. Guarantees:
+ * Build a 6-day rotation with per-day slot counts.
+ * Guarantees:
  *   · no subject repeated within a single day
- *   · all subjects appear within ±1 session of each other
- * Assumes subjectData is already sorted by priority (hardest first).
+ *   · the cursor advances monotonically so weaker subjects (which
+ *     are sorted earlier) appear more often across the week
+ * Assumes subjectData is sorted by priority (hardest first).
  */
-function buildRotation(subjectData, subjectsPerDay) {
+function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
   const N = subjectData.length;
-  const spd = Math.min(subjectsPerDay, N);
+  const slotsPerDay = [
+    weekdaySubjects, weekdaySubjects, weekdaySubjects,
+    weekdaySubjects, weekdaySubjects, saturdaySubjects
+  ];
   const rotation = [];
+  let cursor = 0;
+
   for (let d = 0; d < 6; d++) {
+    const slots = Math.min(slotsPerDay[d], N);
     const daySubjects = [];
-    for (let s = 0; s < spd; s++) {
-      const idx = (d * spd + s) % N;
-      daySubjects.push(subjectData[idx]);
+    const used = new Set();
+    let attempts = 0;
+
+    // Walk forward through the sequence, skipping any index already
+    // used today (safety net — shouldn't trigger in normal use).
+    while (daySubjects.length < slots && attempts < N * 2) {
+      const idx = cursor % N;
+      cursor++;
+      attempts++;
+      if (!used.has(idx)) {
+        used.add(idx);
+        daySubjects.push(subjectData[idx]);
+      }
     }
     rotation.push(daySubjects);
   }
@@ -828,6 +848,8 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     dailyPerSubject: {},
     sessionCount: {},
     subjectsPerDay: 0,
+    weekdaySubjects: 0,
+    saturdaySubjects: 0,
     rotation: 'none',
     splitMode
   };
@@ -840,12 +862,15 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     baseMinutes, baseMinutes, baseMinutes, baseMinutes, baseMinutes, satMinutes
   ];
 
-  // Decide subjects/day + build rotation (sorted hardest-first).
+  // Per-day subject counts.
+  const weekdaySubjects  = determineSubjectsPerDay(baseMinutes, N, false);
+  const saturdaySubjects = determineSubjectsPerDay(satMinutes,  N, true);
+
+  // Rotation sorted hardest-first so weak subjects cycle earlier.
   const sortedByPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
-  const subjectsPerDay = determineSubjectsPerDay(baseMinutes, N);
-  const rotation = buildRotation(sortedByPriority, subjectsPerDay);
+  const rotation = buildRotation(sortedByPriority, weekdaySubjects, saturdaySubjects);
 
   // Allocate each day's budget among that day's subjects.
   const schedule = rotation.map((daySubjects, d) => {
@@ -910,8 +935,10 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     weeklyPerSubject,
     dailyPerSubject,
     sessionCount,
-    subjectsPerDay,
-    rotation: N <= 3 ? 'all-daily' : 'rotating',
+    subjectsPerDay: weekdaySubjects,   // kept for backward compatibility
+    weekdaySubjects,
+    saturdaySubjects,
+    rotation: N <= 2 ? 'all-daily' : 'rotating',
     splitMode
   };
 }
@@ -1055,7 +1082,7 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     schedule, capacities, totalCapacity, scheduled,
     overCapacity, fragmented, minDailyShare,
     weeklyPerSubject, dailyPerSubject,
-    sessionCount, subjectsPerDay, rotation
+    sessionCount, weekdaySubjects, saturdaySubjects, rotation
   } = sched;
 
   // Urgency message
@@ -1130,12 +1157,14 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   html += `<h3>WEEKLY STUDY PLAN</h3>`;
   if (rotation === 'rotating') {
     html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
-          + `Subjects rotate across the week — never more than ${subjectsPerDay} per day. `
-          + `Each subject is studied on 2–3 different days for spaced repetition.`
+          + `Subjects rotate across the week — max ${weekdaySubjects} per weekday, `
+          + `${saturdaySubjects} on Saturday. Each subject gets focused sessions on `
+          + `multiple days for spaced repetition.`
           + `</p>`;
   } else {
     html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
-          + `You have 3 or fewer subjects, so they are studied every day.`
+          + `You have ${subjectData.length} subject${subjectData.length === 1 ? '' : 's'}, `
+          + `so they are studied every day.`
           + `</p>`;
   }
   html += `<div class="plan-table-wrap"><table class="plan-table">
@@ -1248,7 +1277,8 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     weeklyPerSubject,
     dailyPerSubject,
     sessionCount,
-    subjectsPerDay,
+    weekdaySubjects,
+    saturdaySubjects,
     rotation,
     fragmented,
     minDailyShare,
@@ -1751,7 +1781,8 @@ function renderPDF(state) {
     name, days, hoursPerDay, splitMode, subjectData, sortedByMark, avgMark,
     scheduled, schedule, dayNames, capacities,
     weeklyPerSubject, dailyPerSubject, sessionCount,
-    subjectsPerDay, rotation, fragmented, minDailyShare,
+    weekdaySubjects, saturdaySubjects, rotation,
+    fragmented, minDailyShare,
     quotes, urgencyMsg
   } = state;
 
@@ -1837,8 +1868,9 @@ function renderPDF(state) {
 
   if (rotation === 'rotating') {
     pdf.paragraph(
-      `Subjects rotate — no more than ${subjectsPerDay} per day. ` +
-      `Each subject is studied 2–3 times weekly for spaced repetition.`,
+      `Subjects rotate — max ${weekdaySubjects} per weekday, ` +
+      `${saturdaySubjects} on Saturday. Each subject is studied on ` +
+      `multiple days for spaced repetition.`,
       { size: 8.5, color: t.subtext, gap: 6 }
     );
   }
@@ -1955,7 +1987,7 @@ function renderPDF(state) {
 
   pdf.spacer(12);
   pdf.hr();
-  pdf.paragraph('Generated by Study Dojo System v3.3 - offline PDF export.',
+  pdf.paragraph('Generated by Study Dojo System v3.4 - offline PDF export.',
                 { size: 8, color: t.subtext, gap: 0 });
 
   return pdf.build();
@@ -1998,7 +2030,7 @@ function exportTXT() {
   }
   const text = resultsDiv.innerText;
   const header = 'STUDY DOJO - ANALYSIS REPORT\n' + '='.repeat(52) + '\n\n';
-  const footer = '\n\nGenerated by Study Dojo System v3.3\n';
+  const footer = '\n\nGenerated by Study Dojo System v3.4\n';
   const blob = new Blob([header + text + footer], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
