@@ -1,9 +1,10 @@
 // ==============================================================
-// STUDY DOJO — SYSTEM v3.2
+// STUDY DOJO — SYSTEM v3.3
 // ==============================================================
-// Daily-budget scheduler (fills Mon–Fri at your rate, Saturday
-// at 1.5×, Sunday rest), user-selectable split mode (by need or
-// equal), offline colour-PDF generator, history, accessible UI.
+// Daily-budget scheduler with subject ROTATION (never more than
+// 4 subjects per day, each subject studied 2-3× per week for
+// spaced repetition). User-selectable split mode (by need /
+// equal). Offline colour-PDF generator, history, accessible UI.
 // ==============================================================
 
 'use strict';
@@ -125,7 +126,7 @@ function announce(msg) {
   setTimeout(() => { srStatus.textContent = msg; }, 30);
 }
 
-/** Read the current split-mode radio value. */
+/** Read the currently checked split-mode radio value. */
 function getSplitMode() {
   const el = document.querySelector('input[name="splitMode"]:checked');
   return el ? el.value : 'need';
@@ -725,21 +726,30 @@ function getPriority(mark, days) {
 }
 
 // ==============================================================
-// 15. SCHEDULER — daily-budget driven, Mon–Sat
+// 15. SCHEDULER — daily budget + subject rotation
 // --------------------------------------------------------------
-// The daily budget is the TARGET: every Mon–Fri day is filled to
-// exactly `hoursPerDay × 60` minutes, Saturday to `× 1.5`. Sunday
-// is excluded entirely. The user's chosen split mode determines
-// how the budget is divided:
+// Two goals:
+//   1. Fill every day to capacity (weekday × hoursPerDay,
+//      Saturday × 1.5). Sunday is rest.
+//   2. Never crowd more than MAX_SUBJECTS_PER_DAY into one day.
+//      Instead, rotate subjects across the week so each one gets
+//      2–3 focused sessions — spaced repetition, no marathon days.
 //
-//   • 'need'  → weighted by getPriority().weeklyMinutes
-//               (encodes grade severity + exam proximity)
-//   • 'equal' → every subject gets 1 / numSubjects of the budget
+// Rotation strategy (applies to BOTH split modes):
+//   • Determine subjectsPerDay from the daily budget
+//     (target ≥ 30 min per subject, capped at 4).
+//   • Lay subjects on a flat sequence and slice it into 6 days
+//     using modular indexing — no repeats within a day, and
+//     every subject appears within ±1 session of each other.
 //
-// Integer minutes are apportioned using the largest-remainder
-// method so the total always equals the day's capacity exactly
-// and no subject gets an unfair rounding bonus.
+// Split mode controls only how the day's budget is divided
+// among THAT DAY'S subjects:
+//   • 'equal' → each subject on the day gets the same slice.
+//   • 'need'  → weighted by getPriority().weeklyMinutes.
 // ==============================================================
+const MIN_SESSION_MINUTES  = 30;  // aim for at least this per session
+const MAX_SUBJECTS_PER_DAY = 4;   // hard focus cap
+
 const PRIORITY_ORDER = {
   'priority-critical': 0,
   'priority-high':     1,
@@ -747,65 +757,110 @@ const PRIORITY_ORDER = {
   'priority-low':      3
 };
 
+/**
+ * Decide how many subjects a single study day should cover.
+ * Never more than 4, never fewer than 2 (unless the user only
+ * entered 1 subject), and always ≥ MIN_SESSION_MINUTES per
+ * subject given the daily budget.
+ */
+function determineSubjectsPerDay(dailyBudgetMinutes, totalSubjects) {
+  if (totalSubjects <= 3) return totalSubjects;
+  const byBudget = Math.floor(dailyBudgetMinutes / MIN_SESSION_MINUTES);
+  return Math.max(2, Math.min(MAX_SUBJECTS_PER_DAY, byBudget, totalSubjects));
+}
+
+/**
+ * Build a 6-day rotation. Guarantees:
+ *   · no subject repeated within a single day
+ *   · all subjects appear within ±1 session of each other
+ * Assumes subjectData is already sorted by priority (hardest first).
+ */
+function buildRotation(subjectData, subjectsPerDay) {
+  const N = subjectData.length;
+  const spd = Math.min(subjectsPerDay, N);
+  const rotation = [];
+  for (let d = 0; d < 6; d++) {
+    const daySubjects = [];
+    for (let s = 0; s < spd; s++) {
+      const idx = (d * spd + s) % N;
+      daySubjects.push(subjectData[idx]);
+    }
+    rotation.push(daySubjects);
+  }
+  return rotation;
+}
+
+/**
+ * Largest-remainder apportionment — guarantees integer minute
+ * allocations that sum exactly to `capacity`.
+ */
+function apportion(shares, capacity) {
+  const floors = shares.map(v => Math.floor(v));
+  let rem = capacity - floors.reduce((a, b) => a + b, 0);
+  if (rem > 0) {
+    const order = shares
+      .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+      .sort((a, b) => b.frac - a.frac);
+    for (let k = 0; k < rem; k++) {
+      floors[order[k % order.length].i]++;
+    }
+  }
+  return floors;
+}
+
 function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need') {
   const subjectData = Object.entries(subjects).map(([name, mark]) => ({
     name, mark, ...getPriority(mark, days)
   }));
-  const numSubjects = subjectData.length;
-  if (numSubjects === 0) {
-    return {
-      schedule: [[], [], [], [], [], []],
-      dayNames: DAY_NAMES,
-      capacities: [0, 0, 0, 0, 0, 0],
-      totalWeeklyDemand: 0,
-      totalCapacity: 0,
-      scheduled: 0,
-      overCapacity: false,
-      fragmented: false,
-      minDailyShare: 0,
-      weeklyPerSubject: {},
-      dailyPerSubject: {},
-      splitMode
-    };
-  }
+  const N = subjectData.length;
 
-  // Capacities: Mon-Fri at base rate, Saturday ×1.5.
+  const emptyResult = {
+    schedule: [[], [], [], [], [], []],
+    dayNames: DAY_NAMES,
+    capacities: [0, 0, 0, 0, 0, 0],
+    totalWeeklyDemand: 0,
+    totalCapacity: 0,
+    scheduled: 0,
+    overCapacity: false,
+    fragmented: false,
+    minDailyShare: 0,
+    weeklyPerSubject: {},
+    dailyPerSubject: {},
+    sessionCount: {},
+    subjectsPerDay: 0,
+    rotation: 'none',
+    splitMode
+  };
+  if (N === 0) return emptyResult;
+
+  // Capacities: Mon–Fri at base rate, Saturday ×1.5.
   const baseMinutes = Math.round(hoursPerDay * 60);
   const satMinutes  = Math.round(baseMinutes * SATURDAY_BOOST);
   const capacities  = [
     baseMinutes, baseMinutes, baseMinutes, baseMinutes, baseMinutes, satMinutes
   ];
 
-  // Total weight for 'need' mode.
-  const totalWeight = subjectData.reduce((s, d) => s + d.weeklyMinutes, 0) || 1;
+  // Decide subjects/day + build rotation (sorted hardest-first).
+  const sortedByPriority = [...subjectData].sort(
+    (a, b) => b.urgency - a.urgency || a.mark - b.mark
+  );
+  const subjectsPerDay = determineSubjectsPerDay(baseMinutes, N);
+  const rotation = buildRotation(sortedByPriority, subjectsPerDay);
 
-  // Largest-remainder apportionment — guarantees integer minutes
-  // summing exactly to capacity with minimal rounding distortion.
-  function apportion(shares, capacity) {
-    const floors = shares.map(v => Math.floor(v));
-    let rem = capacity - floors.reduce((a, b) => a + b, 0);
-    if (rem > 0) {
-      const order = shares
-        .map((v, i) => ({ i, frac: v - Math.floor(v) }))
-        .sort((a, b) => b.frac - a.frac);
-      for (let k = 0; k < rem; k++) {
-        floors[order[k % order.length].i]++;
-      }
+  // Allocate each day's budget among that day's subjects.
+  const schedule = rotation.map((daySubjects, d) => {
+    const cap = capacities[d];
+
+    let shares;
+    if (splitMode === 'equal') {
+      shares = daySubjects.map(() => cap / daySubjects.length);
+    } else {
+      const totalWeight = daySubjects.reduce((s, x) => s + x.weeklyMinutes, 0) || 1;
+      shares = daySubjects.map(x => cap * (x.weeklyMinutes / totalWeight));
     }
-    return floors;
-  }
-
-  // Build each day's blocks.
-  const schedule = capacities.map(cap => {
-    const shares = subjectData.map(s => {
-      const weight = splitMode === 'equal'
-        ? 1 / numSubjects
-        : s.weeklyMinutes / totalWeight;
-      return cap * weight;
-    });
     const minutes = apportion(shares, cap);
 
-    return subjectData
+    return daySubjects
       .map((s, i) => ({
         subject:    s.name,
         minutes:    minutes[i],
@@ -819,21 +874,28 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
       );
   });
 
-  // Per-subject totals for the results table.
+  // Per-subject aggregates.
   const weeklyPerSubject = {};
+  const sessionCount     = {};
   for (const day of schedule) {
     for (const b of day) {
       weeklyPerSubject[b.subject] = (weeklyPerSubject[b.subject] || 0) + b.minutes;
+      sessionCount[b.subject]     = (sessionCount[b.subject] || 0) + 1;
     }
   }
-  const dailyPerSubject = {};
-  for (const b of schedule[0]) dailyPerSubject[b.subject] = b.minutes;
 
-  // Stats + warnings.
+  // Average minutes per session for each subject.
+  const dailyPerSubject = {};
+  for (const name of Object.keys(weeklyPerSubject)) {
+    const sessions = sessionCount[name] || 1;
+    dailyPerSubject[name] = Math.round(weeklyPerSubject[name] / sessions);
+  }
+
   const totalCapacity     = capacities.reduce((a, b) => a + b, 0);
   const scheduled         = schedule.flat().reduce((s, b) => s + b.minutes, 0);
   const totalWeeklyDemand = subjectData.reduce((s, d) => s + d.weeklyMinutes, 0);
-  const minDailyShare     = Math.min(...schedule.flat().map(b => b.minutes));
+  const allMinutes        = schedule.flat().map(b => b.minutes);
+  const minDailyShare     = allMinutes.length ? Math.min(...allMinutes) : 0;
 
   return {
     schedule,
@@ -843,10 +905,13 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     totalCapacity,
     scheduled,
     overCapacity: totalWeeklyDemand > totalCapacity,
-    fragmented:   minDailyShare > 0 && minDailyShare < 12,
+    fragmented:   minDailyShare > 0 && minDailyShare < 15,
     minDailyShare,
     weeklyPerSubject,
     dailyPerSubject,
+    sessionCount,
+    subjectsPerDay,
+    rotation: N <= 3 ? 'all-daily' : 'rotating',
     splitMode
   };
 }
@@ -989,7 +1054,8 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   const {
     schedule, capacities, totalCapacity, scheduled,
     overCapacity, fragmented, minDailyShare,
-    weeklyPerSubject, dailyPerSubject
+    weeklyPerSubject, dailyPerSubject,
+    sessionCount, subjectsPerDay, rotation
   } = sched;
 
   // Urgency message
@@ -1057,24 +1123,36 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</div>`;
 
-  // ---- Weekly plan table ----
+  // ---- Weekly plan table (rotation-aware) ----
   const byPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
   html += `<h3>WEEKLY STUDY PLAN</h3>`;
+  if (rotation === 'rotating') {
+    html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
+          + `Subjects rotate across the week — never more than ${subjectsPerDay} per day. `
+          + `Each subject is studied on 2–3 different days for spaced repetition.`
+          + `</p>`;
+  } else {
+    html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
+          + `You have 3 or fewer subjects, so they are studied every day.`
+          + `</p>`;
+  }
   html += `<div class="plan-table-wrap"><table class="plan-table">
     <thead><tr>
       <th>Subject</th><th>Grade</th><th>Priority</th>
-      <th>Daily (Mon–Fri)</th><th>Weekly</th>
+      <th>Sessions/Wk</th><th>Per Session</th><th>Weekly</th>
     </tr></thead><tbody>`;
   for (const s of byPriority) {
-    const daily  = dailyPerSubject[s.name]  || 0;
-    const weekly = weeklyPerSubject[s.name] || 0;
+    const sessions = sessionCount[s.name] || 0;
+    const perSess  = dailyPerSubject[s.name] || 0;
+    const weekly   = weeklyPerSubject[s.name] || 0;
     html += `<tr>
       <td><strong>${escHtml(s.name)}</strong></td>
       <td>${s.mark}%</td>
       <td><span class="${s.colorClass} badge">${s.level}</span></td>
-      <td class="col-daily">${formatMinutes(daily)}</td>
+      <td>${sessions}×</td>
+      <td class="col-daily">${formatMinutes(perSess)}</td>
       <td><strong>${formatMinutes(weekly)}</strong></td>
     </tr>`;
   }
@@ -1140,7 +1218,8 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   if (days <= 7)    html += `<li>Use the Pomodoro technique: 25 min focused + 5 min break.</li>`;
   if (days <= 14)   html += `<li>Focus on past papers — they reveal exam patterns.</li>`;
   if (avgMark < 50) html += `<li>Start with the basics. Don't skip foundational topics.</li>`;
-  if (subjectData.length >= 6) html += `<li>With ${subjectData.length} subjects, cluster similar ones together to reduce context switching.</li>`;
+  if (subjectData.length >= 5 && rotation === 'rotating')
+    html += `<li>With ${subjectData.length} subjects, the rotation keeps each day focused — do not try to squeeze in extra subjects.</li>`;
   html += `<li>Review each session's material within 24 hours for best retention.</li>`;
   if (days > 30)    html += `<li>You have time — explore active recall and spaced repetition apps.</li>`;
   if (fragmented)   html += `<li>Short sessions are fine, but aim for at least 20 min per subject when possible.</li>`;
@@ -1168,6 +1247,9 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     capacities,
     weeklyPerSubject,
     dailyPerSubject,
+    sessionCount,
+    subjectsPerDay,
+    rotation,
     fragmented,
     minDailyShare,
     overCapacity,
@@ -1298,7 +1380,6 @@ function restoreFromHistory(h) {
   daysInput.value = h.days != null ? h.days : '';
   if (h.hoursPerDay != null) hoursPerDayInput.value = h.hoursPerDay;
 
-  // Restore split mode
   if (h.splitMode === 'need' || h.splitMode === 'equal') {
     const radio = document.querySelector(`input[name="splitMode"][value="${h.splitMode}"]`);
     if (radio) radio.checked = true;
@@ -1367,7 +1448,6 @@ async function clearAll() {
   daysInput.value = '';
   hoursPerDayInput.value = '2';
 
-  // Reset split mode to default
   const defaultRadio = document.querySelector('input[name="splitMode"][value="need"]');
   if (defaultRadio) defaultRadio.checked = true;
 
@@ -1670,7 +1750,8 @@ function renderPDF(state) {
   const {
     name, days, hoursPerDay, splitMode, subjectData, sortedByMark, avgMark,
     scheduled, schedule, dayNames, capacities,
-    weeklyPerSubject, dailyPerSubject, fragmented, minDailyShare,
+    weeklyPerSubject, dailyPerSubject, sessionCount,
+    subjectsPerDay, rotation, fragmented, minDailyShare,
     quotes, urgencyMsg
   } = state;
 
@@ -1751,10 +1832,19 @@ function renderPDF(state) {
   }
   pdf.spacer(8);
 
-  // Weekly plan table (new columns: Daily / Weekly)
+  // Weekly plan table (rotation-aware: Sessions / Per Session / Weekly)
   pdf.heading('WEEKLY STUDY PLAN');
-  const colW = [165, 44, 72, 82, 74];
-  const headers = ['SUBJECT', 'GRADE', 'PRIORITY', 'DAILY', 'WEEKLY'];
+
+  if (rotation === 'rotating') {
+    pdf.paragraph(
+      `Subjects rotate — no more than ${subjectsPerDay} per day. ` +
+      `Each subject is studied 2–3 times weekly for spaced repetition.`,
+      { size: 8.5, color: t.subtext, gap: 6 }
+    );
+  }
+
+  const colW = [150, 40, 68, 60, 72, 60];
+  const headers = ['SUBJECT', 'GRADE', 'PRIORITY', 'SESSIONS', 'PER SESSION', 'WEEKLY'];
 
   pdf.ensureSpace(20);
   let hx = pdf.marginX;
@@ -1770,10 +1860,11 @@ function renderPDF(state) {
     pdf.ensureSpace(16);
     let cx = pdf.marginX;
     const rowY = pdf.cursorY;
-    const daily  = dailyPerSubject[s.name]  || 0;
-    const weekly = weeklyPerSubject[s.name] || 0;
+    const sessions = (sessionCount && sessionCount[s.name]) || 0;
+    const perSess  = (dailyPerSubject && dailyPerSubject[s.name]) || 0;
+    const weekly   = (weeklyPerSubject && weeklyPerSubject[s.name]) || 0;
 
-    pdf.text(s.name.length > 22 ? s.name.slice(0, 21) + '.' : s.name,
+    pdf.text(s.name.length > 20 ? s.name.slice(0, 19) + '.' : s.name,
              cx, rowY - 10, { size: 9.5, color: t.text, font: 'F2' });
     cx += colW[0];
 
@@ -1785,10 +1876,15 @@ function renderPDF(state) {
     });
     cx += colW[2];
 
-    pdf.text(formatMinutes(daily), cx, rowY - 10, {
-      size: 9.5, color: t.accent, font: 'F2'
+    pdf.text(`${sessions}x`, cx, rowY - 10, {
+      size: 9.5, color: t.text, font: 'F2'
     });
     cx += colW[3];
+
+    pdf.text(formatMinutes(perSess), cx, rowY - 10, {
+      size: 9.5, color: t.accent, font: 'F2'
+    });
+    cx += colW[4];
 
     pdf.text(formatMinutes(weekly), cx, rowY - 10, {
       size: 9.5, color: t.heading, font: 'F2'
@@ -1859,7 +1955,7 @@ function renderPDF(state) {
 
   pdf.spacer(12);
   pdf.hr();
-  pdf.paragraph('Generated by Study Dojo System v3.2 - offline PDF export.',
+  pdf.paragraph('Generated by Study Dojo System v3.3 - offline PDF export.',
                 { size: 8, color: t.subtext, gap: 0 });
 
   return pdf.build();
@@ -1902,7 +1998,7 @@ function exportTXT() {
   }
   const text = resultsDiv.innerText;
   const header = 'STUDY DOJO - ANALYSIS REPORT\n' + '='.repeat(52) + '\n\n';
-  const footer = '\n\nGenerated by Study Dojo System v3.2\n';
+  const footer = '\n\nGenerated by Study Dojo System v3.3\n';
   const blob = new Blob([header + text + footer], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
