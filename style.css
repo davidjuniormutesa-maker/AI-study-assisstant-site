@@ -1,11 +1,11 @@
 /* ==============================================================
-   STUDY DOJO — SYSTEM v3.2 UI
+   STUDY DOJO — SYSTEM v3.5 UI
    --------------------------------------------------------------
    · CSS custom properties (dark + light)
    · Glassmorphism · particle background · responsive
    · Accessible focus rings · reduced-motion support
    · Print-ready with colour preservation
-   · Split-mode radio cards · offline PDF friendly
+   · Split-mode radio cards · evidence-based break chips
    ============================================================== */
 
 /* ==============================================================
@@ -673,7 +673,7 @@ input.input-error {
 }
 
 /* ==============================================================
-   16. OUTPUT OPTIONS — PDF theme + paper size
+   16. OUTPUT OPTIONS
    ============================================================== */
 .output-options {
   display: flex;
@@ -1073,6 +1073,37 @@ button:disabled     { opacity: 0.5; cursor: not-allowed; transform: none; }
 .session-chip.priority-medium   { background: rgba(212,175,55,0.10); color: var(--color-medium);   }
 .session-chip.priority-low      { background: rgba(0,240,255,0.10);  color: var(--color-low);      }
 
+/* ── Break chip — evidence-based rest between subjects ── */
+.break-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  background: rgba(46, 204, 113, 0.08);
+  color: var(--color-success);
+  border: 1px dashed var(--color-success);
+  font-style: italic;
+  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+}
+
+/* ── Spare chip — leftover time after capping sessions at 90 min ── */
+.spare-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  background: rgba(136, 153, 187, 0.08);
+  color: var(--text-muted);
+  border: 1px dotted var(--text-muted);
+  font-style: italic;
+  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+}
+
+/* Sunday rest row */
 .rest-day {
   color: var(--text-muted);
   font-style: italic;
@@ -1087,6 +1118,8 @@ button:disabled     { opacity: 0.5; cursor: not-allowed; transform: none; }
 .day-total small {
   font-weight: 400;
   color: var(--text-muted);
+  font-family: var(--font-body);
+  letter-spacing: 0;
 }
 
 /* ==============================================================
@@ -1418,6 +1451,8 @@ kbd {
   .dojo-header h1 { letter-spacing: 2px; }
   .plan-table  { font-size: 0.78rem; }
   .day-sessions { flex-direction: column; }
+  .break-chip,
+  .spare-chip  { align-self: flex-start; }
   .modal-actions { flex-direction: column-reverse; }
   .modal-actions button { width: 100%; }
 }
@@ -1485,6 +1520,19 @@ kbd {
     break-inside: avoid;
   }
   h3 { break-after: avoid; }
+
+  /* Break and spare chips print with dark borders so they remain
+     visible on white paper. */
+  .break-chip {
+    border: 1px dashed #555 !important;
+    color: #333 !important;
+    background: #f5f5f5 !important;
+  }
+  .spare-chip {
+    border: 1px dotted #888 !important;
+    color: #666 !important;
+    background: #fafafa !important;
+  }
 
   .result-header h2     { color: #333 !important; }
   h3                    { color: #555 !important; }

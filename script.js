@@ -1,12 +1,25 @@
 // ==============================================================
-// STUDY DOJO — SYSTEM v3.4
+// STUDY DOJO — SYSTEM v3.5
 // ==============================================================
-// Daily-budget scheduler with subject ROTATION.
-//   · Monday–Friday: max 2 subjects per day
-//   · Saturday:      max 3 subjects per day
-//   · Sunday:        rest day
-// User-selectable split mode (by need / equal). Offline
-// colour-PDF generator, history, accessible UI.
+// Evidence-based study scheduler.
+//
+// Study-time guidelines (all sources cited in Section 15):
+//   · Cambridge Engineering time-management guidelines
+//   · BMC Medical Education Pomodoro RCT review (2025)
+//   · Buzan / brain-based learning (20–50 min optimal chunk)
+//   · UBC cognitive neuroscience (split > massed study)
+//   · 2025 survey of 522 university students (break patterns)
+//
+// Behaviour:
+//   · Mon–Fri:    max 2 subjects per day
+//   · Saturday:   max 3 subjects per day
+//   · Sunday:     rest day
+//   · Sessions capped at 90 min (fatigue threshold)
+//   · 10-min break between subjects (Pomodoro)
+//   · 25-min minimum per subject (Pomodoro floor)
+//   · Rotation across the week for spaced repetition
+//
+// Offline colour-PDF generator, history, accessible UI.
 // ==============================================================
 
 'use strict';
@@ -128,7 +141,6 @@ function announce(msg) {
   setTimeout(() => { srStatus.textContent = msg; }, 30);
 }
 
-/** Read the currently checked split-mode radio value. */
 function getSplitMode() {
   const el = document.querySelector('input[name="splitMode"]:checked');
   return el ? el.value : 'need';
@@ -312,10 +324,6 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
-/**
- * Suggest a canonical subject name. Never shortens what the user typed —
- * only expands abbreviations or fixes typos within a length window.
- */
 function autoCorrectSubject(raw) {
   const name = String(raw).trim().replace(/\s+/g, ' ');
   if (!name) return '';
@@ -663,14 +671,18 @@ function updateWeeklyCapacity() {
   weeklyCapacityEl.textContent =
     `Estimated weekly capacity: ${weeklyHours.toFixed(1)} hours · Sunday is a rest day.`;
 
-  if (h > 10) {
-    hoursHint.textContent = 'Intense schedule — remember to rest.';
+  // Evidence-based hint: 90 min is the cognitive fatigue threshold.
+  if (h > 8) {
+    hoursHint.textContent = 'Very intense — 90 min blocks max, take 10–20 min breaks.';
     hoursHint.className = 'exam-hint warning';
-  } else if (h < 1) {
+  } else if (h > 6) {
+    hoursHint.textContent = 'Intense but workable — ensure proper breaks.';
+    hoursHint.className = 'exam-hint caution';
+  } else if (h < 0.5) {
     hoursHint.textContent = 'Very light — results may be slow.';
     hoursHint.className = 'exam-hint caution';
   } else {
-    hoursHint.textContent = 'Saturday gets +50% automatically';
+    hoursHint.textContent = 'Saturday gets +50% · sessions capped at 90 min';
     hoursHint.className = 'exam-hint normal';
   }
 }
@@ -728,25 +740,53 @@ function getPriority(mark, days) {
 }
 
 // ==============================================================
-// 15. SCHEDULER — daily budget + subject rotation
+// 15. SCHEDULER — evidence-based study times + rotation
 // --------------------------------------------------------------
-// Two goals:
-//   1. Fill every day to capacity (weekday × hoursPerDay,
-//      Saturday × 1.5). Sunday is rest.
-//   2. Keep each day focused:
-//        · Monday–Friday:  MAX 2 subjects per day
-//        · Saturday:       MAX 3 subjects per day
-//      Subjects rotate across the week so each one still gets
-//      multiple sessions for spaced repetition.
+// Study-time guidelines and their sources:
 //
-// Split mode controls only how the day's budget is divided
-// among THAT DAY'S subjects:
-//   • 'equal' → each subject on the day gets the same slice.
-//   • 'need'  → weighted by getPriority().weeklyMinutes.
-// ==============================================================
-const MIN_SESSION_MINUTES    = 30;  // aim for at least this per session
-const MAX_SUBJECTS_WEEKDAY   = 2;   // Mon–Fri hard cap
-const MAX_SUBJECTS_SATURDAY  = 3;   // Saturday hard cap
+//   MIN_SESSION_MINUTES (25):
+//     Pomodoro technique floor. The BMC Medical Education
+//     RCT review (2025, N=5,270) found 24/6-min intervals
+//     reduce fatigue ~20% and improve focus vs self-paced.
+//
+//   PREFERRED_SESSION_MIN (30):
+//     Buzan / brain-based learning research: "a learning
+//     period of between 20 to 50 minutes produces the best
+//     relationship between learning and recall".
+//
+//   MAX_SESSION_MINUTES (90):
+//     Cognitive fatigue threshold. Cambridge Engineering
+//     time-management guidance: "Most of your study needs
+//     blocks of uninterrupted time (e.g. 1-4 hours)" — but
+//     attention research shows the brain cycles through
+//     peaks and troughs roughly every 90 minutes, and the
+//     "90/20/8" instructional design rule caps continuous
+//     work at 90 min without a break.
+//
+//   BREAK_MINUTES (10):
+//     Most common break duration in a 2025 survey of 522
+//     university students (38.5% reported 10-15 min).
+//
+//   LONG_BREAK_MINUTES (20):
+//     After 2+ subjects or 90+ min of work. Gives the brain
+//     time to reset between cognitive cycles.
+//
+//   Sunday = full rest day:
+//     Cambridge guidance treats rest as part of the plan.
+//
+//   Rotation across the week:
+//     UBC cognitive neuroscience: "three separate, one-hour
+//     study sessions" beat "one three-hour session" for
+//     long-term retention. Spaced repetition is the
+//     single most reliable technique in learning science.
+// --------------------------------------------------------------
+const MIN_SESSION_MINUTES     = 25;  // Pomodoro floor
+const PREFERRED_SESSION_MIN   = 30;  // target minimum per subject
+const MAX_SESSION_MINUTES     = 90;  // cognitive fatigue threshold
+const BREAK_MINUTES           = 10;  // short break between subjects
+const LONG_BREAK_MINUTES      = 20;  // after 2+ subjects / 90+ min block
+const MAX_SUBJECTS_WEEKDAY    = 2;   // Mon–Fri hard cap
+const MAX_SUBJECTS_SATURDAY   = 3;   // Saturday hard cap
 
 const PRIORITY_ORDER = {
   'priority-critical': 0,
@@ -757,27 +797,22 @@ const PRIORITY_ORDER = {
 
 /**
  * Decide how many subjects a single day should cover.
- * Hard cap depends on the day (2 on weekdays, 3 on Saturday).
- * Never exceeds the number of subjects the user actually entered.
+ * Respects the day's hard cap and the 25-min Pomodoro floor.
  */
 function determineSubjectsPerDay(dailyBudgetMinutes, totalSubjects, isSaturday) {
   const cap = isSaturday ? MAX_SUBJECTS_SATURDAY : MAX_SUBJECTS_WEEKDAY;
 
-  // Fewer subjects than the cap → show them all.
   if (totalSubjects <= cap) return totalSubjects;
 
-  // Budget-driven count, respecting the day's cap.
   const byBudget = Math.floor(dailyBudgetMinutes / MIN_SESSION_MINUTES);
   return Math.max(1, Math.min(cap, byBudget, totalSubjects));
 }
 
 /**
  * Build a 6-day rotation with per-day slot counts.
- * Guarantees:
- *   · no subject repeated within a single day
- *   · the cursor advances monotonically so weaker subjects (which
- *     are sorted earlier) appear more often across the week
- * Assumes subjectData is sorted by priority (hardest first).
+ * Guarantees no subject repeated within a day, and the cursor
+ * advances monotonically so weak subjects (sorted earlier)
+ * appear more often across the week.
  */
 function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
   const N = subjectData.length;
@@ -794,8 +829,6 @@ function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
     const used = new Set();
     let attempts = 0;
 
-    // Walk forward through the sequence, skipping any index already
-    // used today (safety net — shouldn't trigger in normal use).
     while (daySubjects.length < slots && attempts < N * 2) {
       const idx = cursor % N;
       cursor++;
@@ -811,8 +844,8 @@ function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
 }
 
 /**
- * Largest-remainder apportionment — guarantees integer minute
- * allocations that sum exactly to `capacity`.
+ * Largest-remainder apportionment — integer minutes summing
+ * exactly to `capacity`.
  */
 function apportion(shares, capacity) {
   const floors = shares.map(v => Math.floor(v));
@@ -826,6 +859,43 @@ function apportion(shares, capacity) {
     }
   }
   return floors;
+}
+
+/**
+ * Compute break time for a day.
+ *
+ * Rules:
+ *   · Between every pair of subjects there's a short break (10 min).
+ *   · If the day's total exceeds MAX_SESSION_MINUTES (90 min),
+ *     at least one break is a long break (20 min).
+ *   · Single-subject days get no break.
+ *
+ * Returns { breakMinutes, shortBreaks, longBreaks, notes }.
+ */
+function calculateBreaks(totalMinutes, subjectCount) {
+  if (subjectCount <= 1) {
+    return { breakMinutes: 0, shortBreaks: 0, longBreaks: 0, notes: [] };
+  }
+
+  const gapsBetween = subjectCount - 1;
+  const notes = [];
+  let breakMinutes = 0;
+  let shortBreaks = 0;
+  let longBreaks = 0;
+
+  if (totalMinutes <= MAX_SESSION_MINUTES) {
+    // Short day — all breaks are short.
+    shortBreaks = gapsBetween;
+    breakMinutes = shortBreaks * BREAK_MINUTES;
+  } else {
+    // Long day — upgrade the middle break to a long one.
+    longBreaks = 1;
+    shortBreaks = Math.max(0, gapsBetween - 1);
+    breakMinutes = shortBreaks * BREAK_MINUTES + longBreaks * LONG_BREAK_MINUTES;
+    notes.push(`${LONG_BREAK_MINUTES}-min long break recommended.`);
+  }
+
+  return { breakMinutes, shortBreaks, longBreaks, notes };
 }
 
 function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need') {
@@ -851,6 +921,8 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     weekdaySubjects: 0,
     saturdaySubjects: 0,
     rotation: 'none',
+    breakSummary: {},
+    spareSummary: {},
     splitMode
   };
   if (N === 0) return emptyResult;
@@ -862,28 +934,54 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     baseMinutes, baseMinutes, baseMinutes, baseMinutes, baseMinutes, satMinutes
   ];
 
-  // Per-day subject counts.
   const weekdaySubjects  = determineSubjectsPerDay(baseMinutes, N, false);
   const saturdaySubjects = determineSubjectsPerDay(satMinutes,  N, true);
 
-  // Rotation sorted hardest-first so weak subjects cycle earlier.
+  // Hardest subjects first so they appear more often across the week.
   const sortedByPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
   const rotation = buildRotation(sortedByPriority, weekdaySubjects, saturdaySubjects);
 
-  // Allocate each day's budget among that day's subjects.
+  const breakSummary = {};
+  const spareSummary = {};
+
   const schedule = rotation.map((daySubjects, d) => {
     const cap = capacities[d];
+    const breaks = calculateBreaks(cap, daySubjects.length);
+    breakSummary[d] = breaks;
 
+    // Time available for actual study (day budget minus break time).
+    const studyBudget = Math.max(0, cap - breaks.breakMinutes);
+
+    // Ideal split (equal or weighted by priority).
     let shares;
     if (splitMode === 'equal') {
-      shares = daySubjects.map(() => cap / daySubjects.length);
+      shares = daySubjects.map(() => studyBudget / daySubjects.length);
     } else {
       const totalWeight = daySubjects.reduce((s, x) => s + x.weeklyMinutes, 0) || 1;
-      shares = daySubjects.map(x => cap * (x.weeklyMinutes / totalWeight));
+      shares = daySubjects.map(x => studyBudget * (x.weeklyMinutes / totalWeight));
     }
-    const minutes = apportion(shares, cap);
+
+    // Integer apportionment, then cap each session at 90 min.
+    let minutes = apportion(shares, studyBudget);
+    minutes = minutes.map(m => Math.min(m, MAX_SESSION_MINUTES));
+
+    // Any study budget left over after capping becomes spare/rest time.
+    const afterCap = minutes.reduce((a, b) => a + b, 0);
+    spareSummary[d] = Math.max(0, studyBudget - afterCap);
+
+    // If capping left spare time AND the number of subjects allows,
+    // try to widen one session up to the cap (never above MAX_SESSION_MINUTES).
+    if (spareSummary[d] > 0 && minutes.length > 0) {
+      const maxRoom = MAX_SESSION_MINUTES - Math.max(...minutes);
+      const canAbsorb = Math.min(spareSummary[d], Math.max(0, maxRoom));
+      if (canAbsorb > 0) {
+        const idx = minutes.indexOf(Math.max(...minutes));
+        minutes[idx] += canAbsorb;
+        spareSummary[d] -= canAbsorb;
+      }
+    }
 
     return daySubjects
       .map((s, i) => ({
@@ -899,7 +997,7 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
       );
   });
 
-  // Per-subject aggregates.
+  // Aggregates.
   const weeklyPerSubject = {};
   const sessionCount     = {};
   for (const day of schedule) {
@@ -909,7 +1007,6 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     }
   }
 
-  // Average minutes per session for each subject.
   const dailyPerSubject = {};
   for (const name of Object.keys(weeklyPerSubject)) {
     const sessions = sessionCount[name] || 1;
@@ -930,15 +1027,17 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     totalCapacity,
     scheduled,
     overCapacity: totalWeeklyDemand > totalCapacity,
-    fragmented:   minDailyShare > 0 && minDailyShare < 15,
+    fragmented:   minDailyShare > 0 && minDailyShare < MIN_SESSION_MINUTES,
     minDailyShare,
     weeklyPerSubject,
     dailyPerSubject,
     sessionCount,
-    subjectsPerDay: weekdaySubjects,   // kept for backward compatibility
+    subjectsPerDay: weekdaySubjects,
     weekdaySubjects,
     saturdaySubjects,
     rotation: N <= 2 ? 'all-daily' : 'rotating',
+    breakSummary,
+    spareSummary,
     splitMode
   };
 }
@@ -953,7 +1052,6 @@ function analyze(e) {
   daysInput.classList.remove('input-error');
   hoursPerDayInput.classList.remove('input-error');
 
-  // Days
   const days = parseInt(daysInput.value, 10);
   if (isNaN(days) || days < 0) {
     showToast('Enter valid days until exam', 'error');
@@ -968,7 +1066,6 @@ function analyze(e) {
     return;
   }
 
-  // Hours
   const hoursPerDay = parseFloat(hoursPerDayInput.value);
   if (isNaN(hoursPerDay) || hoursPerDay < 0.5 || hoursPerDay > 16) {
     showToast('Hours per day must be between 0.5 and 16', 'error');
@@ -980,7 +1077,6 @@ function analyze(e) {
   const name = nameInput.value.trim() || 'Hunter';
   const splitMode = getSplitMode();
 
-  // Subjects
   const subjects = {};
   const errors = [];
   const seen = new Set();
@@ -1082,10 +1178,10 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     schedule, capacities, totalCapacity, scheduled,
     overCapacity, fragmented, minDailyShare,
     weeklyPerSubject, dailyPerSubject,
-    sessionCount, weekdaySubjects, saturdaySubjects, rotation
+    sessionCount, weekdaySubjects, saturdaySubjects, rotation,
+    breakSummary, spareSummary
   } = sched;
 
-  // Urgency message
   let urgencyMsg, urgencyClass;
   if (days === 0)      { urgencyMsg = 'EXAM IS TODAY! Final sprint — focus on key formulas and summaries.'; urgencyClass = 'critical'; }
   else if (days <= 3)  { urgencyMsg = 'ULTRA URGENT: Focus on weakest subjects and key concepts.';            urgencyClass = 'critical'; }
@@ -1121,11 +1217,12 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   if (fragmented) {
     html += `<div class="urgency-banner urgency-medium">
       <span class="urgency-icon" aria-hidden="true">⚠️</span>
-      <span>Some sessions are only ${minDailyShare} min/day. Consider fewer subjects or more daily hours for deeper focus.</span>
+      <span>Some sessions are only ${minDailyShare} min — below the ${MIN_SESSION_MINUTES}-min Pomodoro floor. `
+      + `Consider fewer subjects or more daily hours for effective focus.</span>
     </div>`;
   }
 
-  // ---- Over-capacity info ----
+  // ---- Over-capacity warning ----
   if (overCapacity) {
     html += `<div class="urgency-banner urgency-high">
       <span class="urgency-icon" aria-hidden="true">⚠️</span>
@@ -1150,16 +1247,16 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</div>`;
 
-  // ---- Weekly plan table (rotation-aware) ----
+  // ---- Weekly plan table ----
   const byPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
   html += `<h3>WEEKLY STUDY PLAN</h3>`;
   if (rotation === 'rotating') {
     html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
-          + `Subjects rotate across the week — max ${weekdaySubjects} per weekday, `
-          + `${saturdaySubjects} on Saturday. Each subject gets focused sessions on `
-          + `multiple days for spaced repetition.`
+          + `Subjects rotate — max ${weekdaySubjects} per weekday, `
+          + `${saturdaySubjects} on Saturday. Sessions capped at ${MAX_SESSION_MINUTES} min `
+          + `with ${BREAK_MINUTES}-min breaks between subjects (Pomodoro-based).`
           + `</p>`;
   } else {
     html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
@@ -1187,24 +1284,47 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</tbody></table></div>`;
 
-  // ---- Daily timetable ----
+  // ---- Daily timetable with breaks ----
   html += `<h3>DAILY TIMETABLE (MON–SAT)</h3>`;
+  html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
+        + `Each session is capped at ${MAX_SESSION_MINUTES} min. `
+        + `${BREAK_MINUTES}-min breaks sit between subjects — evidence-based Pomodoro timing.`
+        + `</p>`;
   html += `<div class="timetable-wrap"><table class="timetable">
     <thead><tr><th>Day</th><th>Subjects &amp; Sessions</th><th>Total</th></tr></thead><tbody>`;
   for (let d = 0; d < 6; d++) {
     const dayItems = schedule[d];
     const dayTotal = dayItems.reduce((s, b) => s + b.minutes, 0);
     const cap = capacities[d];
+    const breaks = breakSummary[d] || { breakMinutes: 0 };
+    const spare = spareSummary[d] || 0;
 
     html += `<tr><td class="day-name">${DAY_NAMES[d]}</td><td class="day-sessions">`;
     if (dayItems.length === 0) {
       html += `<span class="rest-day">Rest / Light review</span>`;
     } else {
-      html += dayItems.map(item =>
-        `<span class="session-chip ${item.colorClass}">${escHtml(item.subject)} · ${formatMinutes(item.minutes)}</span>`
-      ).join('');
+      dayItems.forEach((item, i) => {
+        html += `<span class="session-chip ${item.colorClass}">`
+              + `${escHtml(item.subject)} · ${formatMinutes(item.minutes)}`
+              + `</span>`;
+        if (i < dayItems.length - 1) {
+          const breakLabel = breaks.longBreaks > 0 && i === Math.floor(dayItems.length / 2) - 1
+            ? `☕ ${LONG_BREAK_MINUTES}m break`
+            : `☕ ${BREAK_MINUTES}m break`;
+          html += `<span class="break-chip">${breakLabel}</span>`;
+        }
+      });
+      if (spare > 0) {
+        html += `<span class="spare-chip">＋ ${formatMinutes(spare)} spare</span>`;
+      }
     }
-    html += `</td><td class="day-total">${formatMinutes(dayTotal)}<br><small style="font-weight:400;color:var(--text-muted)">of ${formatMinutes(cap)}</small></td></tr>`;
+    const breakTotal = breaks.breakMinutes || 0;
+    const totalSpent = dayTotal + breakTotal + spare;
+    html += `</td><td class="day-total">${formatMinutes(totalSpent)}<br>`
+          + `<small style="font-weight:400;color:var(--text-muted)">`
+          + `${formatMinutes(dayTotal)} study + ${formatMinutes(breakTotal)} break`
+          + (spare > 0 ? ` + ${formatMinutes(spare)} spare` : '')
+          + `</small></td></tr>`;
   }
   html += `<tr><td class="day-name">Sunday</td><td class="day-sessions">`
         + `<span class="rest-day">Rest day — sleep, light review, recharge.</span>`
@@ -1242,17 +1362,19 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     ).join(' → ')}</p>
   </div>`;
 
-  // ---- Tips ----
-  html += `<div class="tips-block"><h3>SYSTEM TIPS</h3><ul>`;
-  if (days <= 7)    html += `<li>Use the Pomodoro technique: 25 min focused + 5 min break.</li>`;
+  // ---- Tips (now with Cambridge/Pomodoro context) ----
+  html += `<div class="tips-block"><h3>SYSTEM TIPS (EVIDENCE-BASED)</h3><ul>`;
+  html += `<li>Sessions are capped at ${MAX_SESSION_MINUTES} min — cognitive fatigue sets in beyond that.</li>`;
+  html += `<li>${BREAK_MINUTES}-min breaks between subjects follow the Pomodoro evidence (BMC 2025 review, N=5,270).</li>`;
+  html += `<li>30–45 min per subject matches the optimal learning/recall window (Buzan research).</li>`;
+  if (days <= 7)    html += `<li>Final week: use past papers under timed conditions — closest to the real thing.</li>`;
   if (days <= 14)   html += `<li>Focus on past papers — they reveal exam patterns.</li>`;
   if (avgMark < 50) html += `<li>Start with the basics. Don't skip foundational topics.</li>`;
   if (subjectData.length >= 5 && rotation === 'rotating')
-    html += `<li>With ${subjectData.length} subjects, the rotation keeps each day focused — do not try to squeeze in extra subjects.</li>`;
-  html += `<li>Review each session's material within 24 hours for best retention.</li>`;
+    html += `<li>With ${subjectData.length} subjects, the rotation keeps each day focused — don't try to squeeze in extra subjects.</li>`;
+  html += `<li>Review each session's material within 24 hours for best retention (spaced repetition).</li>`;
   if (days > 30)    html += `<li>You have time — explore active recall and spaced repetition apps.</li>`;
-  if (fragmented)   html += `<li>Short sessions are fine, but aim for at least 20 min per subject when possible.</li>`;
-  html += `<li>Sleep 7–8 hours. Your brain consolidates memory during sleep.</li>`;
+  html += `<li>Sleep 7–8 hours. Your brain consolidates memory during sleep (Cambridge student guidance).</li>`;
   html += `</ul></div>`;
 
   resultsDiv.innerHTML = html;
@@ -1280,6 +1402,8 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     weekdaySubjects,
     saturdaySubjects,
     rotation,
+    breakSummary,
+    spareSummary,
     fragmented,
     minDailyShare,
     overCapacity,
@@ -1782,6 +1906,7 @@ function renderPDF(state) {
     scheduled, schedule, dayNames, capacities,
     weeklyPerSubject, dailyPerSubject, sessionCount,
     weekdaySubjects, saturdaySubjects, rotation,
+    breakSummary, spareSummary,
     fragmented, minDailyShare,
     quotes, urgencyMsg
   } = state;
@@ -1800,6 +1925,10 @@ function renderPDF(state) {
   pdf.paragraph(
     `${days} day${days === 1 ? '' : 's'} until exam  ·  ${hoursPerDay}h Mon-Fri  ·  Saturday 1.5x  ·  Sunday rest  ·  Split: ${splitLabel}`,
     { size: 9.5, color: t.subtext, gap: 4 }
+  );
+  pdf.paragraph(
+    `Sessions capped at ${MAX_SESSION_MINUTES} min · ${BREAK_MINUTES}-min breaks between subjects (Pomodoro-based)`,
+    { size: 9, color: t.subtext, gap: 4 }
   );
   pdf.paragraph(
     `Generated ${new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })}`,
@@ -1837,7 +1966,7 @@ function renderPDF(state) {
     const y = pdf.cursorY;
     pdf.rect(pdf.marginX, y - 24, pdf.pageW - pdf.marginX * 2, 24, t.card, { stroke: t.medium });
     pdf.text(
-      `Some sessions are only ${minDailyShare} min/day. Consider fewer subjects or more hours.`,
+      `Some sessions are only ${minDailyShare} min — below the ${MIN_SESSION_MINUTES}-min Pomodoro floor.`,
       pdf.marginX + 10, y - 16, { size: 9, color: t.medium, font: 'F2' }
     );
     pdf.cursorY = y - 32;
@@ -1863,14 +1992,13 @@ function renderPDF(state) {
   }
   pdf.spacer(8);
 
-  // Weekly plan table (rotation-aware: Sessions / Per Session / Weekly)
+  // Weekly plan table
   pdf.heading('WEEKLY STUDY PLAN');
 
   if (rotation === 'rotating') {
     pdf.paragraph(
       `Subjects rotate — max ${weekdaySubjects} per weekday, ` +
-      `${saturdaySubjects} on Saturday. Each subject is studied on ` +
-      `multiple days for spaced repetition.`,
+      `${saturdaySubjects} on Saturday. Sessions capped at ${MAX_SESSION_MINUTES} min.`,
       { size: 8.5, color: t.subtext, gap: 6 }
     );
   }
@@ -1926,19 +2054,21 @@ function renderPDF(state) {
   }
   pdf.spacer(8);
 
-  // Daily timetable
+  // Daily timetable with break info
   pdf.heading('DAILY TIMETABLE (MON-SAT)');
   for (let d = 0; d < 6; d++) {
     const day = schedule[d];
     const dayTotal = day.reduce((s, b) => s + b.minutes, 0);
     const cap = capacities[d];
+    const breaks = (breakSummary && breakSummary[d]) || { breakMinutes: 0 };
+    const spare = (spareSummary && spareSummary[d]) || 0;
 
     pdf.ensureSpace(24);
     pdf.text(dayNames[d].toUpperCase(),
              pdf.marginX, pdf.cursorY - 10,
              { font: 'F2', size: 10, color: t.heading });
 
-    const totalLabel = `${formatMinutes(dayTotal)} of ${formatMinutes(cap)}`;
+    const totalLabel = `${formatMinutes(dayTotal + breaks.breakMinutes + spare)} of ${formatMinutes(cap)}`;
     pdf.text(totalLabel,
              pdf.pageW - pdf.marginX - 100, pdf.cursorY - 10,
              { size: 8.5, color: t.subtext });
@@ -1948,7 +2078,7 @@ function renderPDF(state) {
       pdf.text('Rest day', pdf.marginX + 12, pdf.cursorY - 9, { size: 9, color: t.subtext });
       pdf.cursorY -= 14;
     } else {
-      for (const block of day) {
+      day.forEach((block, i) => {
         pdf.ensureSpace(13);
         pdf.text('*', pdf.marginX + 4, pdf.cursorY - 9, { size: 10, color: t.accent });
         pdf.text(block.subject, pdf.marginX + 16, pdf.cursorY - 9, {
@@ -1958,6 +2088,19 @@ function renderPDF(state) {
                  pdf.pageW - pdf.marginX - 40, pdf.cursorY - 9,
                  { size: 9, color: t.subtext });
         pdf.cursorY -= 12;
+
+        if (i < day.length - 1) {
+          pdf.text(`   ${BREAK_MINUTES}-min break`,
+                   pdf.marginX + 16, pdf.cursorY - 9,
+                   { size: 8, color: t.success });
+          pdf.cursorY -= 11;
+        }
+      });
+      if (spare > 0) {
+        pdf.text(`   + ${formatMinutes(spare)} spare / rest`,
+                 pdf.marginX + 16, pdf.cursorY - 9,
+                 { size: 8, color: t.subtext });
+        pdf.cursorY -= 11;
       }
     }
     pdf.cursorY -= 5;
@@ -1987,7 +2130,7 @@ function renderPDF(state) {
 
   pdf.spacer(12);
   pdf.hr();
-  pdf.paragraph('Generated by Study Dojo System v3.4 - offline PDF export.',
+  pdf.paragraph('Generated by Study Dojo System v3.5 - evidence-based study times.',
                 { size: 8, color: t.subtext, gap: 0 });
 
   return pdf.build();
@@ -2030,7 +2173,7 @@ function exportTXT() {
   }
   const text = resultsDiv.innerText;
   const header = 'STUDY DOJO - ANALYSIS REPORT\n' + '='.repeat(52) + '\n\n';
-  const footer = '\n\nGenerated by Study Dojo System v3.4\n';
+  const footer = '\n\nGenerated by Study Dojo System v3.5\n';
   const blob = new Blob([header + text + footer], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
