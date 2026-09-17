@@ -1,25 +1,17 @@
 // ==============================================================
-// STUDY DOJO — SYSTEM v3.5
+// STUDY DOJO — SYSTEM v3.6
 // ==============================================================
-// Evidence-based study scheduler.
-//
-// Study-time guidelines (all sources cited in Section 15):
-//   · Cambridge Engineering time-management guidelines
-//   · BMC Medical Education Pomodoro RCT review (2025)
-//   · Buzan / brain-based learning (20–50 min optimal chunk)
-//   · UBC cognitive neuroscience (split > massed study)
-//   · 2025 survey of 522 university students (break patterns)
-//
-// Behaviour:
-//   · Mon–Fri:    max 2 subjects per day
-//   · Saturday:   max 3 subjects per day
-//   · Sunday:     rest day
-//   · Sessions capped at 90 min (fatigue threshold)
-//   · 10-min break between subjects (Pomodoro)
-//   · 25-min minimum per subject (Pomodoro floor)
+// Evidence-based study scheduler with subject rotation.
+//   · Mon–Fri: max 2 subjects per day
+//   · Saturday: max 3 subjects per day
+//   · Sunday: rest day
+//   · Sessions capped at 90 min (cognitive fatigue threshold)
+//   · 10-min Pomodoro breaks between subjects
 //   · Rotation across the week for spaced repetition
 //
-// Offline colour-PDF generator, history, accessible UI.
+// Offline colour-PDF generator now mirrors the on-screen
+// results page: rounded chips, gradient grade bars, tinted
+// banners, dashed motivation box, emoji → ASCII mapping.
 // ==============================================================
 
 'use strict';
@@ -34,9 +26,8 @@ const SUBJECT_SLOTS  = 8;
 const MIN_SUBJECTS   = 3;
 const MAX_DAYS       = 730;
 const MAX_TOASTS     = 3;
-const SATURDAY_BOOST = 1.5;   // Saturday gets 1.5× the weekday rate
+const SATURDAY_BOOST = 1.5;
 
-// Six study days — Sunday is deliberately excluded.
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ==============================================================
@@ -163,7 +154,7 @@ setTimeout(dismissLoader, 4000);
 window.addEventListener('error', dismissLoader);
 
 // ==============================================================
-// 6. TOASTS (max 3 visible)
+// 6. TOASTS
 // ==============================================================
 function showToast(message, type = 'info', duration = 3000) {
   while (toastContainer.children.length >= MAX_TOASTS) {
@@ -671,7 +662,6 @@ function updateWeeklyCapacity() {
   weeklyCapacityEl.textContent =
     `Estimated weekly capacity: ${weeklyHours.toFixed(1)} hours · Sunday is a rest day.`;
 
-  // Evidence-based hint: 90 min is the cognitive fatigue threshold.
   if (h > 8) {
     hoursHint.textContent = 'Very intense — 90 min blocks max, take 10–20 min breaks.';
     hoursHint.className = 'exam-hint warning';
@@ -741,52 +731,14 @@ function getPriority(mark, days) {
 
 // ==============================================================
 // 15. SCHEDULER — evidence-based study times + rotation
-// --------------------------------------------------------------
-// Study-time guidelines and their sources:
-//
-//   MIN_SESSION_MINUTES (25):
-//     Pomodoro technique floor. The BMC Medical Education
-//     RCT review (2025, N=5,270) found 24/6-min intervals
-//     reduce fatigue ~20% and improve focus vs self-paced.
-//
-//   PREFERRED_SESSION_MIN (30):
-//     Buzan / brain-based learning research: "a learning
-//     period of between 20 to 50 minutes produces the best
-//     relationship between learning and recall".
-//
-//   MAX_SESSION_MINUTES (90):
-//     Cognitive fatigue threshold. Cambridge Engineering
-//     time-management guidance: "Most of your study needs
-//     blocks of uninterrupted time (e.g. 1-4 hours)" — but
-//     attention research shows the brain cycles through
-//     peaks and troughs roughly every 90 minutes, and the
-//     "90/20/8" instructional design rule caps continuous
-//     work at 90 min without a break.
-//
-//   BREAK_MINUTES (10):
-//     Most common break duration in a 2025 survey of 522
-//     university students (38.5% reported 10-15 min).
-//
-//   LONG_BREAK_MINUTES (20):
-//     After 2+ subjects or 90+ min of work. Gives the brain
-//     time to reset between cognitive cycles.
-//
-//   Sunday = full rest day:
-//     Cambridge guidance treats rest as part of the plan.
-//
-//   Rotation across the week:
-//     UBC cognitive neuroscience: "three separate, one-hour
-//     study sessions" beat "one three-hour session" for
-//     long-term retention. Spaced repetition is the
-//     single most reliable technique in learning science.
-// --------------------------------------------------------------
-const MIN_SESSION_MINUTES     = 25;  // Pomodoro floor
-const PREFERRED_SESSION_MIN   = 30;  // target minimum per subject
-const MAX_SESSION_MINUTES     = 90;  // cognitive fatigue threshold
-const BREAK_MINUTES           = 10;  // short break between subjects
-const LONG_BREAK_MINUTES      = 20;  // after 2+ subjects / 90+ min block
-const MAX_SUBJECTS_WEEKDAY    = 2;   // Mon–Fri hard cap
-const MAX_SUBJECTS_SATURDAY   = 3;   // Saturday hard cap
+// ==============================================================
+const MIN_SESSION_MINUTES     = 25;
+const PREFERRED_SESSION_MIN   = 30;
+const MAX_SESSION_MINUTES     = 90;
+const BREAK_MINUTES           = 10;
+const LONG_BREAK_MINUTES      = 20;
+const MAX_SUBJECTS_WEEKDAY    = 2;
+const MAX_SUBJECTS_SATURDAY   = 3;
 
 const PRIORITY_ORDER = {
   'priority-critical': 0,
@@ -795,25 +747,13 @@ const PRIORITY_ORDER = {
   'priority-low':      3
 };
 
-/**
- * Decide how many subjects a single day should cover.
- * Respects the day's hard cap and the 25-min Pomodoro floor.
- */
 function determineSubjectsPerDay(dailyBudgetMinutes, totalSubjects, isSaturday) {
   const cap = isSaturday ? MAX_SUBJECTS_SATURDAY : MAX_SUBJECTS_WEEKDAY;
-
   if (totalSubjects <= cap) return totalSubjects;
-
   const byBudget = Math.floor(dailyBudgetMinutes / MIN_SESSION_MINUTES);
   return Math.max(1, Math.min(cap, byBudget, totalSubjects));
 }
 
-/**
- * Build a 6-day rotation with per-day slot counts.
- * Guarantees no subject repeated within a day, and the cursor
- * advances monotonically so weak subjects (sorted earlier)
- * appear more often across the week.
- */
 function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
   const N = subjectData.length;
   const slotsPerDay = [
@@ -843,10 +783,6 @@ function buildRotation(subjectData, weekdaySubjects, saturdaySubjects) {
   return rotation;
 }
 
-/**
- * Largest-remainder apportionment — integer minutes summing
- * exactly to `capacity`.
- */
 function apportion(shares, capacity) {
   const floors = shares.map(v => Math.floor(v));
   let rem = capacity - floors.reduce((a, b) => a + b, 0);
@@ -861,22 +797,10 @@ function apportion(shares, capacity) {
   return floors;
 }
 
-/**
- * Compute break time for a day.
- *
- * Rules:
- *   · Between every pair of subjects there's a short break (10 min).
- *   · If the day's total exceeds MAX_SESSION_MINUTES (90 min),
- *     at least one break is a long break (20 min).
- *   · Single-subject days get no break.
- *
- * Returns { breakMinutes, shortBreaks, longBreaks, notes }.
- */
 function calculateBreaks(totalMinutes, subjectCount) {
   if (subjectCount <= 1) {
     return { breakMinutes: 0, shortBreaks: 0, longBreaks: 0, notes: [] };
   }
-
   const gapsBetween = subjectCount - 1;
   const notes = [];
   let breakMinutes = 0;
@@ -884,11 +808,9 @@ function calculateBreaks(totalMinutes, subjectCount) {
   let longBreaks = 0;
 
   if (totalMinutes <= MAX_SESSION_MINUTES) {
-    // Short day — all breaks are short.
     shortBreaks = gapsBetween;
     breakMinutes = shortBreaks * BREAK_MINUTES;
   } else {
-    // Long day — upgrade the middle break to a long one.
     longBreaks = 1;
     shortBreaks = Math.max(0, gapsBetween - 1);
     breakMinutes = shortBreaks * BREAK_MINUTES + longBreaks * LONG_BREAK_MINUTES;
@@ -927,7 +849,6 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
   };
   if (N === 0) return emptyResult;
 
-  // Capacities: Mon–Fri at base rate, Saturday ×1.5.
   const baseMinutes = Math.round(hoursPerDay * 60);
   const satMinutes  = Math.round(baseMinutes * SATURDAY_BOOST);
   const capacities  = [
@@ -937,7 +858,6 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
   const weekdaySubjects  = determineSubjectsPerDay(baseMinutes, N, false);
   const saturdaySubjects = determineSubjectsPerDay(satMinutes,  N, true);
 
-  // Hardest subjects first so they appear more often across the week.
   const sortedByPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
@@ -951,10 +871,8 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
     const breaks = calculateBreaks(cap, daySubjects.length);
     breakSummary[d] = breaks;
 
-    // Time available for actual study (day budget minus break time).
     const studyBudget = Math.max(0, cap - breaks.breakMinutes);
 
-    // Ideal split (equal or weighted by priority).
     let shares;
     if (splitMode === 'equal') {
       shares = daySubjects.map(() => studyBudget / daySubjects.length);
@@ -963,16 +881,12 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
       shares = daySubjects.map(x => studyBudget * (x.weeklyMinutes / totalWeight));
     }
 
-    // Integer apportionment, then cap each session at 90 min.
     let minutes = apportion(shares, studyBudget);
     minutes = minutes.map(m => Math.min(m, MAX_SESSION_MINUTES));
 
-    // Any study budget left over after capping becomes spare/rest time.
     const afterCap = minutes.reduce((a, b) => a + b, 0);
     spareSummary[d] = Math.max(0, studyBudget - afterCap);
 
-    // If capping left spare time AND the number of subjects allows,
-    // try to widen one session up to the cap (never above MAX_SESSION_MINUTES).
     if (spareSummary[d] > 0 && minutes.length > 0) {
       const maxRoom = MAX_SESSION_MINUTES - Math.max(...minutes);
       const canAbsorb = Math.min(spareSummary[d], Math.max(0, maxRoom));
@@ -997,7 +911,6 @@ function generateWeeklySchedule(subjects, days, hoursPerDay, splitMode = 'need')
       );
   });
 
-  // Aggregates.
   const weeklyPerSubject = {};
   const sessionCount     = {};
   for (const day of schedule) {
@@ -1195,7 +1108,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
 
   let html = '';
 
-  // ---- Header ----
   html += `<div class="result-header">`;
   html += `<h2>HELLO, ${escHtml(name.toUpperCase())}!</h2>`;
   html += `<div class="result-stats">`;
@@ -1207,13 +1119,11 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   html += `<div class="stat-chip"><span class="stat-value">${splitLabel}</span><span class="stat-label">split</span></div>`;
   html += `</div></div>`;
 
-  // ---- Urgency banner ----
   const urgencyIcon = days <= 3 ? '⚠️' : days <= 14 ? '📅' : '✅';
   html += `<div class="urgency-banner urgency-${urgencyClass}">`
         + `<span class="urgency-icon" aria-hidden="true">${urgencyIcon}</span> `
         + `<span>${escHtml(urgencyMsg)}</span></div>`;
 
-  // ---- Fragmentation warning ----
   if (fragmented) {
     html += `<div class="urgency-banner urgency-medium">
       <span class="urgency-icon" aria-hidden="true">⚠️</span>
@@ -1222,7 +1132,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     </div>`;
   }
 
-  // ---- Over-capacity warning ----
   if (overCapacity) {
     html += `<div class="urgency-banner urgency-high">
       <span class="urgency-icon" aria-hidden="true">⚠️</span>
@@ -1230,7 +1139,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     </div>`;
   }
 
-  // ---- Grade overview ----
   html += `<h3>GRADE OVERVIEW</h3>`;
   html += `<div class="grade-chart">`;
   for (const s of sortedByMark) {
@@ -1247,7 +1155,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</div>`;
 
-  // ---- Weekly plan table ----
   const byPriority = [...subjectData].sort(
     (a, b) => b.urgency - a.urgency || a.mark - b.mark
   );
@@ -1284,7 +1191,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</tbody></table></div>`;
 
-  // ---- Daily timetable with breaks ----
   html += `<h3>DAILY TIMETABLE (MON–SAT)</h3>`;
   html += `<p class="subtext" style="margin-top:-4px;margin-bottom:10px">`
         + `Each session is capped at ${MAX_SESSION_MINUTES} min. `
@@ -1331,7 +1237,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
         + `</td><td class="day-total">0m</td></tr>`;
   html += `</tbody></table></div>`;
 
-  // ---- Techniques ----
   html += `<h3>RECOMMENDED TECHNIQUES</h3>`;
   html += `<div class="techniques-grid">`;
   for (const s of sortedByMark.slice(0, 4)) {
@@ -1343,7 +1248,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   }
   html += `</div>`;
 
-  // ---- Motivation ----
   html += `<div class="motivation-block">
     <h3>MOTIVATION BOOST</h3>
     <p class="weak-link">Your biggest growth area: <strong>${escHtml(weakest.name)}</strong> (${weakest.mark}%). That's where the most points are waiting!</p>
@@ -1354,7 +1258,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   ).join('');
   html += `</div>`;
 
-  // ---- Revision order ----
   html += `<div class="revision-order">
     <h3>RECOMMENDED REVISION ORDER</h3>
     <p>${sortedByMark.map(s =>
@@ -1362,7 +1265,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
     ).join(' → ')}</p>
   </div>`;
 
-  // ---- Tips (now with Cambridge/Pomodoro context) ----
   html += `<div class="tips-block"><h3>SYSTEM TIPS (EVIDENCE-BASED)</h3><ul>`;
   html += `<li>Sessions are capped at ${MAX_SESSION_MINUTES} min — cognitive fatigue sets in beyond that.</li>`;
   html += `<li>${BREAK_MINUTES}-min breaks between subjects follow the Pomodoro evidence (BMC 2025 review, N=5,270).</li>`;
@@ -1381,7 +1283,6 @@ function renderResults(name, days, hoursPerDay, subjects, splitMode) {
   resultsDiv.classList.add('has-results');
   resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Cache for PDF
   lastAnalysis = {
     name, days, hoursPerDay, splitMode,
     subjects: { ...subjects },
@@ -1641,30 +1542,95 @@ async function clearAll() {
 }
 
 // ==============================================================
-// 22. OFFLINE PDF GENERATOR
+// 22. OFFLINE PDF GENERATOR — HTML-matched primitives
 // ==============================================================
 const PDF_THEMES = {
   midnight: {
-    pageBg:'#0a0c18', card:'#12142a', accent:'#00f0ff', heading:'#d4af37',
-    text:'#d0dff0', subtext:'#8899bb', border:'#1a1a2e',
-    critical:'#ff2a75', high:'#ff6b4a', medium:'#d4af37', low:'#00f0ff', success:'#2ecc71'
+    pageBg:  '#0a0c18',
+    card:    '#0d0d1a',
+    accent:  '#00f0ff',
+    heading: '#d4af37',
+    text:    '#d0dff0',
+    subtext: '#8899bb',
+    muted:   '#556677',
+    border:  '#1a1a2e',
+    critical:'#ff2a75',
+    high:    '#ff6b4a',
+    medium:  '#d4af37',
+    low:     '#00f0ff',
+    success: '#2ecc71',
+    critical2:'#ff5090',
+    high2:    '#ff9060',
+    medium2:  '#f0d060',
+    low2:     '#60f0ff'
   },
   solar: {
-    pageBg:'#1a0f08', card:'#2a1810', accent:'#ff9f43', heading:'#ffd166',
-    text:'#fff5e6', subtext:'#c9a980', border:'#3a2418',
-    critical:'#ff5252', high:'#ff8a3d', medium:'#ffd166', low:'#7ed6df', success:'#6ab04c'
+    pageBg:  '#1a0f08',
+    card:    '#2a1810',
+    accent:  '#ff9f43',
+    heading: '#ffd166',
+    text:    '#fff5e6',
+    subtext: '#c9a980',
+    muted:   '#8a6b48',
+    border:  '#3a2418',
+    critical:'#ff5252',
+    high:    '#ff8a3d',
+    medium:  '#ffd166',
+    low:     '#7ed6df',
+    success: '#6ab04c',
+    critical2:'#ff7777',
+    high2:    '#ffb07a',
+    medium2:  '#ffe89a',
+    low2:     '#b3e8ee'
   },
   forest: {
-    pageBg:'#0f1a12', card:'#16241a', accent:'#7bd389', heading:'#f2e9c7',
-    text:'#e6f2e6', subtext:'#8fa99a', border:'#1e3325',
-    critical:'#e5534b', high:'#e8a250', medium:'#d4c66b', low:'#7bd389', success:'#7bd389'
+    pageBg:  '#0f1a12',
+    card:    '#16241a',
+    accent:  '#7bd389',
+    heading: '#f2e9c7',
+    text:    '#e6f2e6',
+    subtext: '#8fa99a',
+    muted:   '#5f7268',
+    border:  '#1e3325',
+    critical:'#e5534b',
+    high:    '#e8a250',
+    medium:  '#d4c66b',
+    low:     '#7bd389',
+    success: '#7bd389',
+    critical2:'#ff7a70',
+    high2:    '#ffc178',
+    medium2:  '#efe0a0',
+    low2:     '#a8e5b3'
   },
   mono: {
-    pageBg:'#ffffff', card:'#f5f5f5', accent:'#000000', heading:'#111111',
-    text:'#222222', subtext:'#555555', border:'#cccccc',
-    critical:'#000000', high:'#333333', medium:'#666666', low:'#999999', success:'#000000'
+    pageBg:  '#ffffff',
+    card:    '#f5f5f5',
+    accent:  '#000000',
+    heading: '#111111',
+    text:    '#222222',
+    subtext: '#555555',
+    muted:   '#777777',
+    border:  '#cccccc',
+    critical:'#000000',
+    high:    '#333333',
+    medium:  '#666666',
+    low:     '#999999',
+    success: '#000000',
+    critical2:'#333333',
+    high2:    '#555555',
+    medium2:  '#888888',
+    low2:     '#bbbbbb'
   }
 };
+
+function hexToRgbRaw(hex) {
+  const h = String(hex).replace('#', '');
+  return [
+    parseInt(h.slice(0, 2), 16) || 0,
+    parseInt(h.slice(2, 4), 16) || 0,
+    parseInt(h.slice(4, 6), 16) || 0
+  ];
+}
 
 function priorityColor(theme, colorClass) {
   switch (colorClass) {
@@ -1676,15 +1642,35 @@ function priorityColor(theme, colorClass) {
   }
 }
 
+function priorityGradient(theme, colorClass) {
+  switch (colorClass) {
+    case 'priority-critical': return [theme.critical, theme.critical2];
+    case 'priority-high':     return [theme.high,     theme.high2];
+    case 'priority-medium':   return [theme.medium,   theme.medium2];
+    case 'priority-low':      return [theme.low,      theme.low2];
+    default:                  return [theme.text,     theme.text];
+  }
+}
+
+function tint(hex, alpha = 0.14) {
+  const [r, g, b] = hexToRgbRaw(hex);
+  return `#${[
+    Math.round(r * alpha).toString(16).padStart(2, '0'),
+    Math.round(g * alpha).toString(16).padStart(2, '0'),
+    Math.round(b * alpha).toString(16).padStart(2, '0')
+  ].join('')}`;
+}
+
 class OfflinePDF {
   constructor({ paper = 'a4', theme = 'midnight' } = {}) {
     const sizes = { a4: [595.28, 841.89], letter: [612, 792] };
     const size = sizes[paper] || sizes.a4;
     this.pageW = size[0];
     this.pageH = size[1];
-    this.marginX = 44;
-    this.marginTop = 56;
-    this.marginBottom = 48;
+    this.marginX = 40;
+    this.marginTop = 44;
+    this.marginBottom = 40;
+    this.contentW = this.pageW - this.marginX * 2;
     this.theme = PDF_THEMES[theme] || PDF_THEMES.midnight;
     this.pages = [];
     this.buf = [];
@@ -1707,12 +1693,19 @@ class OfflinePDF {
 
   esc(str) {
     return String(str)
+      .replace(/\u2192/g, '->')
+      .replace(/\u2190/g, '<-')
+      .replace(/\u26A0\uFE0F?/g, '!')
+      .replace(/\u2705/g, '+')
+      .replace(/\u2615/g, '~')
+      .replace(/[\u{1F4C5}]/gu, '#')
+      .replace(/[\u{1F4A1}\u{1F534}\u{1F525}\u{1F31F}\u{1F4AA}]/gu, '*')
       .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
       .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
       .replace(/[\u2013\u2014]/g, '-')
       .replace(/\u2026/g, '...')
       .replace(/\u00A0/g, ' ')
-      .replace(/[^\x20-\x7E]/g, '?')
+      .replace(/[^\x20-\x7E]/g, '')
       .replace(/\\/g, '\\\\')
       .replace(/\(/g, '\\(')
       .replace(/\)/g, '\\)');
@@ -1728,20 +1721,8 @@ class OfflinePDF {
     this.buf.push('ET');
   }
 
-  rect(x, y, w, h, fill, { stroke = null, strokeW = 0.5 } = {}) {
-    const [r, g, b] = hexToRgb01(fill);
-    this.buf.push(`${r} ${g} ${b} rg`);
-    this.buf.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
-    if (stroke) {
-      const [sr, sg, sb] = hexToRgb01(stroke);
-      this.buf.push(`${sr} ${sg} ${sb} RG ${strokeW} w`);
-      this.buf.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
-    }
-  }
-
   measure(str, size, bold = false) {
-    const factor = bold ? 0.575 : 0.52;
-    return String(str).length * size * factor;
+    return String(str).length * size * (bold ? 0.575 : 0.52);
   }
 
   wrap(str, size, maxWidth, bold = false) {
@@ -1759,6 +1740,88 @@ class OfflinePDF {
     return lines;
   }
 
+  centeredText(str, x, w, y, opts = {}) {
+    const size = opts.size || 11;
+    const bold = !!opts.bold;
+    const tw = this.measure(str, size, bold);
+    this.text(str, x + (w - tw) / 2, y, {
+      ...opts,
+      font: bold ? 'F2' : 'F1'
+    });
+  }
+
+  rect(x, y, w, h, fill, { stroke = null, strokeW = 0.5 } = {}) {
+    const [r, g, b] = hexToRgb01(fill);
+    this.buf.push(`${r} ${g} ${b} rg`);
+    this.buf.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+    if (stroke) {
+      const [sr, sg, sb] = hexToRgb01(stroke);
+      this.buf.push(`${sr} ${sg} ${sb} RG ${strokeW} w`);
+      this.buf.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
+    }
+  }
+
+  roundedRect(x, y, w, h, r, fill, { stroke = null, strokeW = 0.5, dashed = false } = {}) {
+    const rad = Math.min(r, w / 2, h / 2);
+    const k = 0.5522847498 * rad;
+
+    this.buf.push('q');
+    this.buf.push(`${(x + rad).toFixed(2)} ${y.toFixed(2)} m`);
+    this.buf.push(`${(x + w - rad).toFixed(2)} ${y.toFixed(2)} l`);
+    this.buf.push(
+      `${(x + w - rad + k).toFixed(2)} ${y.toFixed(2)} ` +
+      `${(x + w).toFixed(2)} ${(y + rad - k).toFixed(2)} ` +
+      `${(x + w).toFixed(2)} ${(y + rad).toFixed(2)} c`
+    );
+    this.buf.push(`${(x + w).toFixed(2)} ${(y + h - rad).toFixed(2)} l`);
+    this.buf.push(
+      `${(x + w).toFixed(2)} ${(y + h - rad + k).toFixed(2)} ` +
+      `${(x + w - rad + k).toFixed(2)} ${(y + h).toFixed(2)} ` +
+      `${(x + w - rad).toFixed(2)} ${(y + h).toFixed(2)} c`
+    );
+    this.buf.push(`${(x + rad).toFixed(2)} ${(y + h).toFixed(2)} l`);
+    this.buf.push(
+      `${(x + rad - k).toFixed(2)} ${(y + h).toFixed(2)} ` +
+      `${x.toFixed(2)} ${(y + h - rad + k).toFixed(2)} ` +
+      `${x.toFixed(2)} ${(y + h - rad).toFixed(2)} c`
+    );
+    this.buf.push(`${x.toFixed(2)} ${(y + rad).toFixed(2)} l`);
+    this.buf.push(
+      `${x.toFixed(2)} ${(y + rad - k).toFixed(2)} ` +
+      `${(x + rad - k).toFixed(2)} ${y.toFixed(2)} ` +
+      `${(x + rad).toFixed(2)} ${y.toFixed(2)} c`
+    );
+
+    if (fill) {
+      const [r2, g2, b2] = hexToRgb01(fill);
+      this.buf.push(`${r2} ${g2} ${b2} rg`);
+      this.buf.push('f');
+    }
+    if (stroke) {
+      const [sr, sg, sb] = hexToRgb01(stroke);
+      this.buf.push(`${sr} ${sg} ${sb} RG ${strokeW} w`);
+      if (dashed) this.buf.push('[3 2] 0 d');
+      this.buf.push('S');
+      if (dashed) this.buf.push('[] 0 d');
+    }
+    this.buf.push('Q');
+  }
+
+  linearGradientRect(x, y, w, h, c1, c2, steps = 48) {
+    const rgb1 = hexToRgbRaw(c1);
+    const rgb2 = hexToRgbRaw(c2);
+    const stripW = w / steps;
+    for (let i = 0; i < steps; i++) {
+      const t = steps === 1 ? 0 : i / (steps - 1);
+      const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * t);
+      const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * t);
+      const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * t);
+      const sx = x + i * stripW;
+      this.buf.push(`${(r / 255).toFixed(3)} ${(g / 255).toFixed(3)} ${(b / 255).toFixed(3)} rg`);
+      this.buf.push(`${sx.toFixed(2)} ${y.toFixed(2)} ${(stripW + 0.4).toFixed(2)} ${h.toFixed(2)} re f`);
+    }
+  }
+
   hr() {
     this.ensureSpace(10);
     const [r, g, b] = hexToRgb01(this.theme.border);
@@ -1770,36 +1833,63 @@ class OfflinePDF {
     this.cursorY -= 10;
   }
 
+  chip(x, y, h, text, {
+    bg = null, fg = null, border = null,
+    size = 8, padding = 8, dashed = false
+  } = {}) {
+    const tw = this.measure(text, size, false);
+    const w = tw + padding * 2;
+    this.roundedRect(x, y, w, h, h / 2, bg || this.theme.card, {
+      stroke: border, strokeW: 0.5, dashed
+    });
+    this.text(text, x + padding, y + h / 2 - size * 0.35, {
+      size,
+      color: fg || this.theme.text
+    });
+    return w;
+  }
+
   spacer(h = 8) { this.cursorY -= h; }
 
-  title(str) {
-    this.ensureSpace(34);
-    const size = 22;
-    this.text(str, this.marginX, this.cursorY - size, {
-      font: 'F2', size, color: this.theme.heading
+  pageTitle(str) {
+    this.ensureSpace(40);
+    const size = 26;
+    this.centeredText(str, this.marginX, this.contentW, this.cursorY - size, {
+      size, bold: true, color: this.theme.heading
     });
     this.cursorY -= size + 6;
     const [r, g, b] = hexToRgb01(this.theme.heading);
-    this.buf.push(`${r} ${g} ${b} RG 1.4 w`);
+    this.buf.push(`${r} ${g} ${b} RG 1.6 w`);
+    const underlineW = 100;
+    const ux = this.pageW / 2 - underlineW / 2;
     this.buf.push(
-      `${this.marginX} ${this.cursorY.toFixed(2)} m ` +
-      `${this.marginX + 90} ${this.cursorY.toFixed(2)} l S`
+      `${ux.toFixed(2)} ${this.cursorY.toFixed(2)} m ` +
+      `${(ux + underlineW).toFixed(2)} ${this.cursorY.toFixed(2)} l S`
     );
-    this.cursorY -= 14;
+    this.cursorY -= 12;
   }
 
-  heading(str) {
-    this.ensureSpace(26);
-    const size = 12;
+  sectionHeading(str) {
+    this.ensureSpace(28);
+    const size = 10.5;
     this.text(str.toUpperCase(), this.marginX, this.cursorY - size, {
       font: 'F2', size, color: this.theme.accent
+    });
+    this.cursorY -= size + 8;
+  }
+
+  mainHeading(str) {
+    this.ensureSpace(30);
+    const size = 16;
+    this.centeredText(str, this.marginX, this.contentW, this.cursorY - size, {
+      size, bold: true, color: this.theme.heading
     });
     this.cursorY -= size + 10;
   }
 
-  paragraph(str, { size = 10.5, color = null, indent = 0, gap = 6, bold = false } = {}) {
+  paragraph(str, { size = 10, color = null, indent = 0, gap = 6, bold = false } = {}) {
     const c = color || this.theme.text;
-    const maxW = this.pageW - this.marginX * 2 - indent;
+    const maxW = this.contentW - indent;
     const lines = this.wrap(str, size, maxW, bold);
     const lineH = size * 1.35;
     for (const ln of lines) {
@@ -1812,16 +1902,30 @@ class OfflinePDF {
     this.cursorY -= gap;
   }
 
-  bullet(str, { size = 10, color = null, indent = 12, gap = 3 } = {}) {
+  paragraphCentered(str, { size = 10, color = null, gap = 6, bold = false } = {}) {
+    const c = color || this.theme.text;
+    const lines = this.wrap(str, size, this.contentW, bold);
+    const lineH = size * 1.35;
+    for (const ln of lines) {
+      this.ensureSpace(lineH);
+      this.centeredText(ln, this.marginX, this.contentW, this.cursorY - size, {
+        size, color: c, bold
+      });
+      this.cursorY -= lineH;
+    }
+    this.cursorY -= gap;
+  }
+
+  bullet(str, { size = 9.5, color = null, indent = 12, gap = 3 } = {}) {
     const c = color || this.theme.subtext;
-    const maxW = this.pageW - this.marginX * 2 - indent - 10;
+    const maxW = this.contentW - indent - 10;
     const lines = this.wrap(str, size, maxW);
     const lineH = size * 1.35;
     for (let i = 0; i < lines.length; i++) {
       this.ensureSpace(lineH);
       if (i === 0) {
-        this.text('*', this.marginX + indent - 8, this.cursorY - size, {
-          size, color: this.theme.accent
+        this.text('>', this.marginX + indent - 8, this.cursorY - size, {
+          size, color: this.theme.accent, font: 'F2'
         });
       }
       this.text(lines[i], this.marginX + indent, this.cursorY - size, { size, color: c });
@@ -1898,7 +2002,7 @@ class OfflinePDF {
 }
 
 // ==============================================================
-// 23. PDF RENDERING
+// 23. PDF RENDERING — mirrors the on-screen results layout
 // ==============================================================
 function renderPDF(state) {
   const {
@@ -1908,7 +2012,7 @@ function renderPDF(state) {
     weekdaySubjects, saturdaySubjects, rotation,
     breakSummary, spareSummary,
     fragmented, minDailyShare,
-    quotes, urgencyMsg
+    quotes, urgencyMsg, urgencyClass
   } = state;
 
   const pdf = new OfflinePDF({
@@ -1917,221 +2021,500 @@ function renderPDF(state) {
   });
   const t = pdf.theme;
   const splitLabel = splitMode === 'equal' ? 'Equally' : 'By Need';
+  const colW = pdf.contentW;
 
-  pdf.title('STUDY DOJO');
-  pdf.paragraph(`Training Plan for ${name}`, {
-    size: 14, color: t.heading, bold: true, gap: 2
-  });
-  pdf.paragraph(
-    `${days} day${days === 1 ? '' : 's'} until exam  ·  ${hoursPerDay}h Mon-Fri  ·  Saturday 1.5x  ·  Sunday rest  ·  Split: ${splitLabel}`,
-    { size: 9.5, color: t.subtext, gap: 4 }
+  // Page title
+  pdf.spacer(4);
+  pdf.pageTitle('STUDY DOJO');
+  pdf.paragraphCentered(
+    `System v3.6  ·  personalised training plan  ·  ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+    { size: 9, color: t.subtext, gap: 2 }
   );
-  pdf.paragraph(
-    `Sessions capped at ${MAX_SESSION_MINUTES} min · ${BREAK_MINUTES}-min breaks between subjects (Pomodoro-based)`,
-    { size: 9, color: t.subtext, gap: 4 }
-  );
-  pdf.paragraph(
-    `Generated ${new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })}`,
-    { size: 8.5, color: t.subtext, gap: 12 }
-  );
+  pdf.spacer(6);
   pdf.hr();
+  pdf.spacer(10);
 
-  // At-a-glance chips
-  pdf.heading('AT A GLANCE');
-  pdf.ensureSpace(50);
-  const statY = pdf.cursorY;
+  // HELLO, NAME
+  pdf.mainHeading(`HELLO, ${name.toUpperCase()}!`);
+  pdf.paragraphCentered(
+    `${days} day${days === 1 ? '' : 's'} until exam  ·  ${hoursPerDay}h Mon-Fri  ·  Sat 1.5x  ·  Sunday rest  ·  ${splitLabel} split`,
+    { size: 9.5, color: t.subtext, gap: 10 }
+  );
+
+  // Stat chip row
   const stats = [
     { v: String(subjectData.length), l: 'SUBJECTS' },
     { v: `${avgMark}%`,              l: 'AVERAGE' },
-    { v: formatMinutes(scheduled),   l: 'PER WEEK' },
+    { v: formatMinutes(scheduled),   l: '/WEEK' },
     { v: `${days}`,                  l: 'DAYS LEFT' },
+    { v: `${hoursPerDay}h`,          l: '/DAY' },
     { v: splitLabel,                 l: 'SPLIT' }
   ];
   const chipGap = 6;
-  const chipW = (pdf.pageW - pdf.marginX * 2 - chipGap * (stats.length - 1)) / stats.length;
-  const chipH = 40;
-  let chipX = pdf.marginX;
-  for (const s of stats) {
-    pdf.rect(chipX, statY - chipH, chipW, chipH, t.card, { stroke: t.border });
-    pdf.text(s.v, chipX + 8, statY - 20, { font: 'F2', size: 12, color: t.heading });
-    pdf.text(s.l, chipX + 8, statY - 33, { size: 7, color: t.subtext });
-    chipX += chipW + chipGap;
+  const chipH = 44;
+  const chipW = (colW - chipGap * (stats.length - 1)) / stats.length;
+  pdf.ensureSpace(chipH + 14);
+  const chipTop = pdf.cursorY;
+  for (let i = 0; i < stats.length; i++) {
+    const cx = pdf.marginX + i * (chipW + chipGap);
+    const cy = chipTop - chipH;
+    pdf.roundedRect(cx, cy, chipW, chipH, 8, t.card, { stroke: t.border, strokeW: 0.6 });
+    pdf.centeredText(stats[i].v, cx, chipW, cy + chipH - 17, {
+      size: 13, bold: true, color: t.heading
+    });
+    pdf.centeredText(stats[i].l, cx, chipW, cy + 9, {
+      size: 6.5, color: t.muted
+    });
   }
-  pdf.cursorY = statY - chipH - 12;
+  pdf.cursorY = chipTop - chipH - 14;
 
-  pdf.paragraph(urgencyMsg, { size: 10, color: t.accent, gap: 10 });
+  // Urgency banner
+  const bannerColor = (
+    urgencyClass === 'critical' ? t.critical :
+    urgencyClass === 'high'     ? t.high :
+    urgencyClass === 'medium'   ? t.medium :
+    urgencyClass === 'normal'   ? t.success :
+                                  t.low
+  );
+  const bannerBG = tint(bannerColor, 0.14);
+  const bannerLines = pdf.wrap(urgencyMsg, 9.5, colW - 26);
+  const bannerH = Math.max(28, bannerLines.length * 13 + 14);
+  pdf.ensureSpace(bannerH + 10);
+  const bannerTop = pdf.cursorY;
+  pdf.roundedRect(
+    pdf.marginX, bannerTop - bannerH, colW, bannerH, 8,
+    bannerBG, { stroke: bannerColor, strokeW: 0.6 }
+  );
+  pdf.rect(pdf.marginX, bannerTop - bannerH, 3.5, bannerH, bannerColor);
+  for (let i = 0; i < bannerLines.length; i++) {
+    pdf.text(bannerLines[i], pdf.marginX + 14, bannerTop - 16 - i * 13, {
+      size: 9.5, color: bannerColor, font: 'F2'
+    });
+  }
+  pdf.cursorY = bannerTop - bannerH - 12;
 
+  // Fragmentation warning
   if (fragmented) {
-    pdf.ensureSpace(30);
-    const y = pdf.cursorY;
-    pdf.rect(pdf.marginX, y - 24, pdf.pageW - pdf.marginX * 2, 24, t.card, { stroke: t.medium });
-    pdf.text(
-      `Some sessions are only ${minDailyShare} min — below the ${MIN_SESSION_MINUTES}-min Pomodoro floor.`,
-      pdf.marginX + 10, y - 16, { size: 9, color: t.medium, font: 'F2' }
+    const msg = `Some sessions are only ${minDailyShare} min — below the ${MIN_SESSION_MINUTES}-min Pomodoro floor. Consider fewer subjects or more daily hours.`;
+    const lines = pdf.wrap(msg, 9, colW - 26);
+    const h = Math.max(26, lines.length * 12 + 12);
+    pdf.ensureSpace(h + 8);
+    const top = pdf.cursorY;
+    pdf.roundedRect(
+      pdf.marginX, top - h, colW, h, 8,
+      tint(t.medium, 0.12), { stroke: t.medium, strokeW: 0.6 }
     );
-    pdf.cursorY = y - 32;
+    pdf.rect(pdf.marginX, top - h, 3.5, h, t.medium);
+    for (let i = 0; i < lines.length; i++) {
+      pdf.text(lines[i], pdf.marginX + 14, top - 15 - i * 12, {
+        size: 9, color: t.medium, font: 'F2'
+      });
+    }
+    pdf.cursorY = top - h - 10;
   }
 
-  // Grade overview
-  pdf.heading('GRADE OVERVIEW');
+  // Over-capacity warning
+  if (state.overCapacity) {
+    const msg = `Priority engine suggests ${formatMinutes(state.totalWeeklyDemand || scheduled)}/week, but your schedule fits ${formatMinutes(state.totalCapacity)}. Consider more hours.`;
+    const lines = pdf.wrap(msg, 9, colW - 26);
+    const h = Math.max(26, lines.length * 12 + 12);
+    pdf.ensureSpace(h + 8);
+    const top = pdf.cursorY;
+    pdf.roundedRect(
+      pdf.marginX, top - h, colW, h, 8,
+      tint(t.high, 0.12), { stroke: t.high, strokeW: 0.6 }
+    );
+    pdf.rect(pdf.marginX, top - h, 3.5, h, t.high);
+    for (let i = 0; i < lines.length; i++) {
+      pdf.text(lines[i], pdf.marginX + 14, top - 15 - i * 12, {
+        size: 9, color: t.high, font: 'F2'
+      });
+    }
+    pdf.cursorY = top - h - 10;
+  }
+
+  // GRADE OVERVIEW
+  pdf.sectionHeading('GRADE OVERVIEW');
+  const labelW = 130;
+  const badgeW = 32;
+  const barTrackW = colW - labelW - badgeW - 12;
+  const barH = 14;
+
   for (const s of sortedByMark) {
-    pdf.ensureSpace(18);
-    const barY = pdf.cursorY - 12;
-    const labelW = 120;
-    const valueW = 34;
-    const barW = pdf.pageW - pdf.marginX * 2 - labelW - valueW - 6;
-    pdf.text(s.name.length > 22 ? s.name.slice(0, 21) + '.' : s.name,
-             pdf.marginX, barY + 2, { size: 9, color: t.text });
-    pdf.rect(pdf.marginX + labelW, barY, barW, 10, t.card);
-    const w = Math.max(4, (s.mark / 100) * barW);
-    pdf.rect(pdf.marginX + labelW, barY, w, 10, priorityColor(t, s.colorClass));
-    pdf.text(`${s.mark}%`,
-             pdf.marginX + labelW + barW + 6, barY + 2,
-             { size: 8.5, color: t.subtext });
-    pdf.cursorY -= 16;
+    pdf.ensureSpace(barH + 6);
+    const rowY = pdf.cursorY - barH;
+
+    const nameText = s.name.length > 22 ? s.name.slice(0, 21) + '.' : s.name;
+    pdf.text(nameText, pdf.marginX, rowY + 4, { size: 9.5, color: t.text });
+
+    const trackX = pdf.marginX + labelW;
+    pdf.roundedRect(trackX, rowY, barTrackW, barH, barH / 2, t.card, {
+      stroke: t.border, strokeW: 0.4
+    });
+
+    const fillW = Math.max(barH, (Math.max(2, s.mark) / 100) * barTrackW);
+    const [c1, c2] = priorityGradient(t, s.colorClass);
+    pdf.linearGradientRect(trackX, rowY, fillW, barH, c1, c2, 40);
+
+    const pctX = trackX + fillW - 26;
+    pdf.text(`${s.mark}%`, pctX, rowY + 4, {
+      size: 7.5, bold: true, color: '#ffffff'
+    });
+
+    const bx = pdf.marginX + labelW + barTrackW + 6;
+    pdf.roundedRect(bx, rowY, badgeW, barH, 4,
+      tint(priorityColor(t, s.colorClass), 0.22),
+      { stroke: priorityColor(t, s.colorClass), strokeW: 0.4 }
+    );
+    pdf.centeredText(s.grade, bx, badgeW, rowY + 4, {
+      size: 8, bold: true, color: priorityColor(t, s.colorClass)
+    });
+
+    pdf.cursorY -= barH + 5;
   }
   pdf.spacer(8);
 
-  // Weekly plan table
-  pdf.heading('WEEKLY STUDY PLAN');
-
+  // WEEKLY STUDY PLAN
+  pdf.sectionHeading('WEEKLY STUDY PLAN');
   if (rotation === 'rotating') {
     pdf.paragraph(
-      `Subjects rotate — max ${weekdaySubjects} per weekday, ` +
-      `${saturdaySubjects} on Saturday. Sessions capped at ${MAX_SESSION_MINUTES} min.`,
-      { size: 8.5, color: t.subtext, gap: 6 }
+      `Subjects rotate — max ${weekdaySubjects} per weekday, ${saturdaySubjects} on Saturday. ` +
+      `Sessions capped at ${MAX_SESSION_MINUTES} min with ${BREAK_MINUTES}-min breaks.`,
+      { size: 8.5, color: t.subtext, gap: 8 }
     );
   }
 
-  const colW = [150, 40, 68, 60, 72, 60];
-  const headers = ['SUBJECT', 'GRADE', 'PRIORITY', 'SESSIONS', 'PER SESSION', 'WEEKLY'];
-
+  const planCols = [148, 42, 78, 54, 76, 66];
   pdf.ensureSpace(20);
-  let hx = pdf.marginX;
-  const headerY = pdf.cursorY;
-  for (let i = 0; i < headers.length; i++) {
-    pdf.text(headers[i], hx, headerY - 10, { font: 'F2', size: 8, color: t.subtext });
-    hx += colW[i];
+  const headerY = pdf.cursorY - 10;
+  let px = pdf.marginX;
+  const headerLabels = ['SUBJECT', 'GRADE', 'PRIORITY', 'SESSIONS', 'PER SESSION', 'WEEKLY'];
+  for (let i = 0; i < headerLabels.length; i++) {
+    pdf.text(headerLabels[i], px, headerY, { size: 7.5, bold: true, color: t.muted });
+    px += planCols[i];
   }
-  pdf.cursorY -= 14;
+  pdf.cursorY = headerY - 6;
   pdf.hr();
+  pdf.spacer(2);
 
-  for (const s of subjectData) {
-    pdf.ensureSpace(16);
-    let cx = pdf.marginX;
-    const rowY = pdf.cursorY;
-    const sessions = (sessionCount && sessionCount[s.name]) || 0;
-    const perSess  = (dailyPerSubject && dailyPerSubject[s.name]) || 0;
-    const weekly   = (weeklyPerSubject && weeklyPerSubject[s.name]) || 0;
+  for (let idx = 0; idx < subjectData.length; idx++) {
+    const s = subjectData[idx];
+    pdf.ensureSpace(20);
+    const rowH = 18;
+    const rowY = pdf.cursorY - rowH;
 
-    pdf.text(s.name.length > 20 ? s.name.slice(0, 19) + '.' : s.name,
-             cx, rowY - 10, { size: 9.5, color: t.text, font: 'F2' });
-    cx += colW[0];
+    if (idx % 2 === 0) {
+      pdf.rect(pdf.marginX - 4, rowY + 1, colW + 8, rowH - 2, tint(t.card, 0.7));
+    }
 
-    pdf.text(`${s.mark}%`, cx, rowY - 10, { size: 9.5, color: t.text });
-    cx += colW[1];
+    const sessions = sessionCount[s.name] || 0;
+    const perSess  = dailyPerSubject[s.name] || 0;
+    const weekly   = weeklyPerSubject[s.name] || 0;
 
-    pdf.text(s.level, cx, rowY - 10, {
-      size: 8.5, color: priorityColor(t, s.colorClass), font: 'F2'
+    let rx = pdf.marginX;
+    const baseline = rowY + 6;
+
+    pdf.text(s.name.length > 22 ? s.name.slice(0, 21) + '.' : s.name,
+             rx, baseline, { size: 9.5, bold: true, color: t.text });
+    rx += planCols[0];
+
+    pdf.text(`${s.mark}%`, rx, baseline, { size: 9.5, color: t.text });
+    rx += planCols[1];
+
+    const chipText = s.level;
+    const chipTextW = pdf.measure(chipText, 7.5, true);
+    const chipWid = chipTextW + 12;
+    pdf.roundedRect(rx, baseline - 3, chipWid, 12, 6,
+      tint(priorityColor(t, s.colorClass), 0.22),
+      { stroke: priorityColor(t, s.colorClass), strokeW: 0.4 }
+    );
+    pdf.text(chipText, rx + 6, baseline + 0.5, {
+      size: 7.5, bold: true, color: priorityColor(t, s.colorClass)
     });
-    cx += colW[2];
+    rx += planCols[2];
 
-    pdf.text(`${sessions}x`, cx, rowY - 10, {
-      size: 9.5, color: t.text, font: 'F2'
+    pdf.text(`${sessions}x`, rx, baseline, { size: 9.5, color: t.text });
+    rx += planCols[3];
+
+    pdf.text(formatMinutes(perSess), rx, baseline, {
+      size: 9.5, bold: true, color: t.accent
     });
-    cx += colW[3];
+    rx += planCols[4];
 
-    pdf.text(formatMinutes(perSess), cx, rowY - 10, {
-      size: 9.5, color: t.accent, font: 'F2'
-    });
-    cx += colW[4];
-
-    pdf.text(formatMinutes(weekly), cx, rowY - 10, {
-      size: 9.5, color: t.heading, font: 'F2'
+    pdf.text(formatMinutes(weekly), rx, baseline, {
+      size: 9.5, bold: true, color: t.heading
     });
 
-    pdf.cursorY -= 15;
+    pdf.cursorY = rowY - 1;
   }
-  pdf.spacer(8);
+  pdf.spacer(10);
 
-  // Daily timetable with break info
-  pdf.heading('DAILY TIMETABLE (MON-SAT)');
+  // DAILY TIMETABLE
+  pdf.sectionHeading('DAILY TIMETABLE (MON-SAT)');
+  pdf.paragraph(
+    `Each session is capped at ${MAX_SESSION_MINUTES} min. ` +
+    `${BREAK_MINUTES}-min breaks sit between subjects — evidence-based Pomodoro timing.`,
+    { size: 8.5, color: t.subtext, gap: 8 }
+  );
+
+  const sessionH = 16;
+  const sessionGapX = 5;
+  const sessionGapY = 3;
+
   for (let d = 0; d < 6; d++) {
-    const day = schedule[d];
-    const dayTotal = day.reduce((s, b) => s + b.minutes, 0);
+    const dayBlocks = schedule[d];
+    const dayTotal = dayBlocks.reduce((s, b) => s + b.minutes, 0);
     const cap = capacities[d];
-    const breaks = (breakSummary && breakSummary[d]) || { breakMinutes: 0 };
+    const brk = (breakSummary && breakSummary[d]) || { breakMinutes: 0, longBreaks: 0 };
     const spare = (spareSummary && spareSummary[d]) || 0;
 
-    pdf.ensureSpace(24);
-    pdf.text(dayNames[d].toUpperCase(),
-             pdf.marginX, pdf.cursorY - 10,
-             { font: 'F2', size: 10, color: t.heading });
+    pdf.ensureSpace(sessionH * 3 + 20);
 
-    const totalLabel = `${formatMinutes(dayTotal + breaks.breakMinutes + spare)} of ${formatMinutes(cap)}`;
-    pdf.text(totalLabel,
-             pdf.pageW - pdf.marginX - 100, pdf.cursorY - 10,
-             { size: 8.5, color: t.subtext });
-    pdf.cursorY -= 15;
+    const dayY = pdf.cursorY - 10;
+    pdf.text(dayNames[d].toUpperCase(), pdf.marginX, dayY, {
+      size: 9.5, bold: true, color: t.heading
+    });
+    const totalLabel = `${formatMinutes(dayTotal + brk.breakMinutes + spare)} of ${formatMinutes(cap)}`;
+    const totalW = pdf.measure(totalLabel, 8);
+    pdf.text(totalLabel, pdf.marginX + colW - totalW, dayY, {
+      size: 8, color: t.muted
+    });
+    pdf.cursorY = dayY - 4;
 
-    if (day.length === 0) {
-      pdf.text('Rest day', pdf.marginX + 12, pdf.cursorY - 9, { size: 9, color: t.subtext });
-      pdf.cursorY -= 14;
-    } else {
-      day.forEach((block, i) => {
-        pdf.ensureSpace(13);
-        pdf.text('*', pdf.marginX + 4, pdf.cursorY - 9, { size: 10, color: t.accent });
-        pdf.text(block.subject, pdf.marginX + 16, pdf.cursorY - 9, {
-          size: 9.5, color: t.text
-        });
-        pdf.text(formatMinutes(block.minutes),
-                 pdf.pageW - pdf.marginX - 40, pdf.cursorY - 9,
-                 { size: 9, color: t.subtext });
-        pdf.cursorY -= 12;
-
-        if (i < day.length - 1) {
-          pdf.text(`   ${BREAK_MINUTES}-min break`,
-                   pdf.marginX + 16, pdf.cursorY - 9,
-                   { size: 8, color: t.success });
-          pdf.cursorY -= 11;
-        }
+    if (dayBlocks.length === 0) {
+      pdf.paragraph('Rest / Light review', {
+        size: 9, color: t.muted, indent: 8, gap: 6
       });
+    } else {
+      let lineY = pdf.cursorY - sessionH;
+      const lineStartX = pdf.marginX + 4;
+      let cx = lineStartX;
+      const maxX = pdf.marginX + colW - 4;
+
+      for (let i = 0; i < dayBlocks.length; i++) {
+        const block = dayBlocks[i];
+        const chipText = `${block.subject} · ${formatMinutes(block.minutes)}`;
+        const chipTextW = pdf.measure(chipText, 8);
+        const chipWid = chipTextW + 14;
+
+        if (cx + chipWid > maxX && cx > lineStartX) {
+          cx = lineStartX;
+          lineY -= sessionH + sessionGapY;
+          pdf.ensureSpace(sessionH + 6);
+        }
+
+        pdf.roundedRect(cx, lineY, chipWid, sessionH, sessionH / 2,
+          tint(priorityColor(t, block.colorClass), 0.18),
+          { stroke: priorityColor(t, block.colorClass), strokeW: 0.4 }
+        );
+        pdf.text(chipText, cx + 7, lineY + sessionH / 2 - 3, {
+          size: 8, color: priorityColor(t, block.colorClass)
+        });
+
+        cx += chipWid + sessionGapX;
+
+        if (i < dayBlocks.length - 1) {
+          const breakIsLong = brk.longBreaks > 0 && i === Math.floor(dayBlocks.length / 2) - 1;
+          const breakLabel = breakIsLong
+            ? `${LONG_BREAK_MINUTES}m break`
+            : `${BREAK_MINUTES}m break`;
+          const breakTextW = pdf.measure(breakLabel, 7.5);
+          const breakWid = breakTextW + 14;
+
+          if (cx + breakWid > maxX) {
+            cx = lineStartX;
+            lineY -= sessionH + sessionGapY;
+            pdf.ensureSpace(sessionH + 6);
+          }
+
+          pdf.roundedRect(cx, lineY + 2, breakWid, sessionH - 4, (sessionH - 4) / 2,
+            tint(t.success, 0.14),
+            { stroke: t.success, strokeW: 0.4, dashed: true }
+          );
+          pdf.text(breakLabel, cx + 7, lineY + sessionH / 2 - 3, {
+            size: 7.5, color: t.success
+          });
+          cx += breakWid + sessionGapX;
+        }
+      }
+
       if (spare > 0) {
-        pdf.text(`   + ${formatMinutes(spare)} spare / rest`,
-                 pdf.marginX + 16, pdf.cursorY - 9,
-                 { size: 8, color: t.subtext });
-        pdf.cursorY -= 11;
+        const spareLabel = `+ ${formatMinutes(spare)} spare`;
+        const spareTextW = pdf.measure(spareLabel, 7.5);
+        const spareWid = spareTextW + 14;
+        if (cx + spareWid > maxX) {
+          cx = lineStartX;
+          lineY -= sessionH + sessionGapY;
+          pdf.ensureSpace(sessionH + 6);
+        }
+        pdf.roundedRect(cx, lineY + 2, spareWid, sessionH - 4, (sessionH - 4) / 2,
+          tint(t.muted, 0.14),
+          { stroke: t.muted, strokeW: 0.4, dashed: true }
+        );
+        pdf.text(spareLabel, cx + 7, lineY + sessionH / 2 - 3, {
+          size: 7.5, color: t.muted
+        });
+      }
+
+      pdf.cursorY = lineY - 6;
+    }
+    pdf.spacer(2);
+  }
+
+  pdf.ensureSpace(20);
+  const sunY = pdf.cursorY - 10;
+  pdf.text('SUNDAY', pdf.marginX, sunY, { size: 9.5, bold: true, color: t.heading });
+  pdf.cursorY = sunY - 4;
+  pdf.paragraph('Rest day — sleep, light review, recharge.', {
+    size: 9, color: t.muted, indent: 8, gap: 10
+  });
+
+  // RECOMMENDED TECHNIQUES
+  pdf.sectionHeading('RECOMMENDED TECHNIQUES');
+  const techList = sortedByMark.slice(0, 4);
+  const colGap = 8;
+  const cardW = (colW - colGap) / 2;
+
+  for (let i = 0; i < techList.length; i += 2) {
+    pdf.ensureSpace(72);
+    const rowTop = pdf.cursorY;
+    const cardH = 66;
+
+    for (let j = 0; j < 2 && i + j < techList.length; j++) {
+      const s = techList[i + j];
+      const cx = pdf.marginX + j * (cardW + colGap);
+      const cy = rowTop - cardH;
+
+      pdf.roundedRect(cx, cy, cardW, cardH, 8, t.card, {
+        stroke: t.border, strokeW: 0.5
+      });
+
+      pdf.text(`${s.name}  ${s.grade}`, cx + 10, cy + cardH - 14, {
+        size: 10, bold: true, color: t.heading
+      });
+
+      const techniques = getTechniquesFor(s.name).slice(0, 3);
+      for (let k = 0; k < techniques.length; k++) {
+        const lineY = cy + cardH - 28 - k * 12;
+        pdf.text('>', cx + 10, lineY, { size: 8, color: t.accent, font: 'F2' });
+        let text = techniques[k];
+        const maxTextW = cardW - 30;
+        if (pdf.measure(text, 8.5) > maxTextW) {
+          const maxChars = Math.floor(maxTextW / (8.5 * 0.52));
+          text = text.slice(0, maxChars - 1) + '...';
+        }
+        pdf.text(text, cx + 20, lineY, { size: 8.5, color: t.subtext });
       }
     }
-    pdf.cursorY -= 5;
-  }
-  pdf.spacer(4);
-  pdf.paragraph('Sunday is a rest day - sleep, light review, recharge.',
-                { size: 9.5, color: t.subtext, gap: 12 });
 
-  pdf.heading('RECOMMENDED TECHNIQUES');
-  for (const s of sortedByMark.slice(0, 4)) {
-    pdf.ensureSpace(50);
-    pdf.text(`${s.name}  (${s.grade}  ${s.mark}%)`,
-             pdf.marginX, pdf.cursorY - 11,
-             { font: 'F2', size: 10, color: t.heading });
-    pdf.cursorY -= 15;
-    const techniques = getTechniquesFor(s.name);
-    for (const tech of techniques.slice(0, 3)) {
-      pdf.bullet(tech, { size: 9, color: t.subtext });
+    pdf.cursorY = rowTop - cardH - 6;
+  }
+  pdf.spacer(6);
+
+  // MOTIVATION BOOST
+  pdf.sectionHeading('MOTIVATION BOOST');
+
+  const weakSubj = sortedByMark[0];
+  const strongSubj = sortedByMark[sortedByMark.length - 1];
+  const weakLine    = `Your biggest growth area: ${weakSubj.name} (${weakSubj.mark}%).`;
+  const strongLine  = `Your strongest weapon: ${strongSubj.name} (${strongSubj.mark}%).`;
+  const weakLines   = pdf.wrap(weakLine, 9.5, colW - 24);
+  const strongLines = pdf.wrap(strongLine, 9.5, colW - 24);
+  const quoteLines  = quotes.map(q => pdf.wrap(`"${q}"`, 9, colW - 24));
+  const totalQuoteLines = quoteLines.reduce((s, arr) => s + arr.length, 0);
+  const boxH = 14 + weakLines.length * 12 + 6 + strongLines.length * 12 + 6
+             + totalQuoteLines * 12 + quotes.length * 4 + 12;
+
+  pdf.ensureSpace(boxH + 8);
+  const boxTop = pdf.cursorY;
+  const boxY = boxTop - boxH;
+
+  pdf.roundedRect(pdf.marginX, boxY, colW, boxH, 10, t.card, {
+    stroke: t.heading, strokeW: 0.7, dashed: true
+  });
+
+  let ty = boxTop - 16;
+  for (const ln of weakLines) {
+    pdf.text(ln, pdf.marginX + 12, ty, { size: 9.5, color: t.text });
+    ty -= 12;
+  }
+  ty -= 4;
+  for (const ln of strongLines) {
+    pdf.text(ln, pdf.marginX + 12, ty, { size: 9.5, color: t.subtext });
+    ty -= 12;
+  }
+  ty -= 4;
+  for (let qi = 0; qi < quoteLines.length; qi++) {
+    for (const ln of quoteLines[qi]) {
+      pdf.text(ln, pdf.marginX + 12, ty, { size: 9, color: t.text });
+      ty -= 12;
     }
-    pdf.cursorY -= 4;
+    ty -= 4;
+  }
+  pdf.cursorY = boxY - 12;
+
+  // RECOMMENDED REVISION ORDER
+  pdf.sectionHeading('RECOMMENDED REVISION ORDER');
+  pdf.ensureSpace(24);
+
+  let rx = pdf.marginX;
+  let ry = pdf.cursorY - 18;
+  const maxX = pdf.marginX + colW;
+
+  for (let i = 0; i < sortedByMark.length; i++) {
+    const s = sortedByMark[i];
+    const label = `${s.name} (${s.mark}%)`;
+    const labelW = pdf.measure(label, 8.5, true);
+    const chipWid = labelW + 16;
+
+    if (rx + chipWid > maxX && rx > pdf.marginX) {
+      rx = pdf.marginX;
+      ry -= 22;
+      pdf.ensureSpace(22);
+    }
+
+    pdf.roundedRect(rx, ry, chipWid, 16, 8,
+      tint(priorityColor(t, s.colorClass), 0.20),
+      { stroke: priorityColor(t, s.colorClass), strokeW: 0.4 }
+    );
+    pdf.text(label, rx + 8, ry + 5, {
+      size: 8.5, bold: true, color: priorityColor(t, s.colorClass)
+    });
+    rx += chipWid;
+
+    if (i < sortedByMark.length - 1) {
+      pdf.text('->', rx + 3, ry + 5, { size: 9, color: t.muted });
+      rx += 16;
+    }
+  }
+  pdf.cursorY = ry - 12;
+
+  // SYSTEM TIPS
+  pdf.sectionHeading('SYSTEM TIPS (EVIDENCE-BASED)');
+  const tips = [];
+  tips.push(`Sessions are capped at ${MAX_SESSION_MINUTES} min — cognitive fatigue sets in beyond that.`);
+  tips.push(`${BREAK_MINUTES}-min breaks between subjects follow the Pomodoro evidence (BMC 2025, N=5,270).`);
+  tips.push(`30-45 min per subject matches the optimal learning/recall window (Buzan research).`);
+  if (days <= 7)    tips.push('Final week: use past papers under timed conditions — closest to the real thing.');
+  if (days <= 14)   tips.push('Focus on past papers — they reveal exam patterns.');
+  if (avgMark < 50) tips.push("Start with the basics. Don't skip foundational topics.");
+  if (subjectData.length >= 5 && rotation === 'rotating')
+    tips.push(`With ${subjectData.length} subjects, the rotation keeps each day focused.`);
+  tips.push("Review each session's material within 24 hours for best retention (spaced repetition).");
+  if (days > 30)    tips.push('You have time — explore active recall and spaced repetition apps.');
+  tips.push('Sleep 7-8 hours. Your brain consolidates memory during sleep.');
+
+  for (const tip of tips) {
+    pdf.bullet(tip, { size: 9, color: t.subtext });
   }
 
-  pdf.heading('MOTIVATION');
-  for (const q of quotes) {
-    pdf.paragraph(`"${q}"`, { size: 9.5, color: t.text, indent: 8, gap: 4 });
-  }
-
-  pdf.spacer(12);
+  // Footer
+  pdf.spacer(8);
   pdf.hr();
-  pdf.paragraph('Generated by Study Dojo System v3.5 - evidence-based study times.',
-                { size: 8, color: t.subtext, gap: 0 });
+  pdf.paragraphCentered(
+    'Generated by Study Dojo System v3.6 — offline PDF export',
+    { size: 8, color: t.muted, gap: 0 }
+  );
 
   return pdf.build();
 }
@@ -2173,7 +2556,7 @@ function exportTXT() {
   }
   const text = resultsDiv.innerText;
   const header = 'STUDY DOJO - ANALYSIS REPORT\n' + '='.repeat(52) + '\n\n';
-  const footer = '\n\nGenerated by Study Dojo System v3.5\n';
+  const footer = '\n\nGenerated by Study Dojo System v3.6\n';
   const blob = new Blob([header + text + footer], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
